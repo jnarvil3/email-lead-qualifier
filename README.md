@@ -11,6 +11,53 @@ Automatically enrich and score leads from email signups using public data source
 - **CLI tool**: Batch process leads from command line
 - **Cost tracking**: Know exactly how much each enrichment costs
 
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ installed
+- GitHub account (for API token)
+- Optional: Hunter.io account (for LinkedIn data)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/jnarvil3/email-lead-enricher.git
+   cd email-lead-enricher
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up API keys**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and add your GitHub token:
+   - Create a token at: https://github.com/settings/tokens
+   - Scopes needed: `public_repo`, `read:user`
+   ```env
+   GITHUB_TOKEN=ghp_your_token_here
+   HUNTER_API_KEY=your_api_key_here  # Optional
+   ```
+
+4. **Start the demo dashboard**
+   ```bash
+   npm run dev
+   ```
+
+   Open http://localhost:3001/dashboard.html in your browser
+
+5. **Test with a demo email**
+   - Enter an email address in the dashboard
+   - Click "Enrich Lead"
+   - View the score, tier, and enrichment data
+
+That's it! You're ready to enrich leads.
+
 ## 📊 Scoring Criteria
 
 Leads are scored 0-100 based on four categories:
@@ -27,44 +74,23 @@ Leads are scored 0-100 based on four categories:
 - **Average** (30-49): Standard process
 - **Weak** (<30): Low priority
 
-## 🚀 Quick Start
+## 💻 Usage
 
-### 1. Install Dependencies
+### Web Dashboard
 
-```bash
-cd /Users/jaspernarvil/Desktop/claude/lead-enrichment
-npm install
-```
-
-### 2. Configure API Keys
-
-Copy `.env.example` to `.env` and add your API keys:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-```env
-# GitHub Personal Access Token (required)
-# Create at: https://github.com/settings/tokens
-# Scopes needed: public_repo, read:user
-GITHUB_TOKEN=ghp_your_token_here
-
-# Hunter.io API Key (optional - 50 searches/month on free tier)
-# Get at: https://hunter.io/api
-HUNTER_API_KEY=your_api_key_here
-```
-
-### 3. Run Demo Dashboard
-
+Start the server and use the web interface:
 ```bash
 npm run dev
 ```
+Visit http://localhost:3001/dashboard.html
 
-Visit: http://localhost:3001/dashboard.html
+Features:
+- Enrich single leads
+- Batch process multiple emails
+- View API usage stats
+- See detailed score breakdowns
 
-### 4. Or Use CLI
+### Command Line Interface (CLI)
 
 ```bash
 # Enrich single email
@@ -76,6 +102,13 @@ npm run enrich john@example.com jane@example.com
 # Run demo with test emails
 npm run enrich demo
 ```
+
+Output includes:
+- GitHub profile data (repos, stars, languages)
+- Company and position (via Hunter.io)
+- Score breakdown by category
+- Tier assignment and reasoning
+- Cost per enrichment
 
 ## 📝 Customizing Scoring
 
