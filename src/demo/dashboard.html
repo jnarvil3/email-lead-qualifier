@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Enrichment Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        textarea {
+            min-height: 100px;
+            font-family: monospace;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .lead-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .lead-card.exceptional {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .lead-card.strong {
+            border-color: #17a2b8;
+            background: #f0f9ff;
+        }
+
+        .lead-card.good {
+            border-color: #ffc107;
+            background: #fffbf0;
+        }
+
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .email {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tier-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tier-exceptional {
+            background: #28a745;
+            color: white;
+        }
+
+        .tier-strong {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .tier-good {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .tier-average {
+            background: #6c757d;
+            color: white;
+        }
+
+        .tier-weak {
+            background: #dc3545;
+            color: white;
+        }
+
+        .score {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .reasoning {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .breakdown-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .breakdown-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .breakdown-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+
+        .enrichment-data {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .data-section {
+            margin-bottom: 10px;
+        }
+
+        .data-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Lead Enrichment Demo</h1>
+            <p class="subtitle">Automatically enrich and score leads using GitHub and Hunter.io data</p>
+        </header>
+
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-label">GitHub Requests</div>
+                <div class="stat-value" id="githubRemaining">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Hunter Searches</div>
+                <div class="stat-value" id="hunterRemaining">--</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">Test Single Lead</h2>
+            <div class="input-group">
+                <label>Email Address</label>
+                <input type="email" id="singleEmail" placeholder="john@example.com">
+            </div>
+            <button onclick="enrichSingle()">Enrich Lead</button>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">Batch Enrich</h2>
+            <div class="input-group">
+                <label>Email Addresses (one per line)</label>
+                <textarea id="batchEmails" placeholder="john@example.com&#10;jane@example.com&#10;bob@example.com"></textarea>
+            </div>
+            <button onclick="enrichBatch()">Enrich Batch</button>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const API_URL = '';
+
+        // Load stats on page load
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_URL}/api/stats`);
+                const stats = await response.json();
+
+                document.getElementById('githubRemaining').textContent =
+                    `${stats.github.remaining} / ${stats.github.limit}`;
+
+                if (stats.hunter) {
+                    document.getElementById('hunterRemaining').textContent =
+                        `${stats.hunter.limit - stats.hunter.used} / ${stats.hunter.limit}`;
+                } else {
+                    document.getElementById('hunterRemaining').textContent = 'Not configured';
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function enrichSingle() {
+            const email = document.getElementById('singleEmail').value.trim();
+            if (!email) {
+                alert('Please enter an email address');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_URL}/api/enrich`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+
+                const result = await response.json();
+                displayResults([result]);
+                loadStats(); // Refresh stats
+            } catch (error) {
+                document.getElementById('results').innerHTML =
+                    `<div class="card"><p style="color: red;">Error: ${error.message}</p></div>`;
+            }
+        }
+
+        async function enrichBatch() {
+            const emails = document.getElementById('batchEmails').value
+                .split('\n')
+                .map(e => e.trim())
+                .filter(e => e);
+
+            if (emails.length === 0) {
+                alert('Please enter at least one email address');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const response = await fetch(`${API_URL}/api/enrich/batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ leads: emails.map(email => ({ email })) }),
+                });
+
+                const data = await response.json();
+                displayResults(data.results);
+                displaySummary(data.summary);
+                loadStats(); // Refresh stats
+            } catch (error) {
+                document.getElementById('results').innerHTML =
+                    `<div class="card"><p style="color: red;">Error: ${error.message}</p></div>`;
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('results').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Enriching leads...</p>
+                </div>
+            `;
+        }
+
+        function displaySummary(summary) {
+            const summaryHtml = `
+                <div class="card">
+                    <h3>📊 Batch Summary</h3>
+                    <div class="breakdown">
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">Total</div>
+                            <div class="breakdown-value">${summary.total}</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">Exceptional</div>
+                            <div class="breakdown-value">${summary.tiers.exceptional}</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">Strong</div>
+                            <div class="breakdown-value">${summary.tiers.strong}</div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">Total Cost</div>
+                            <div class="breakdown-value">$${summary.totalCost.toFixed(4)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('results').innerHTML = summaryHtml +
+                document.getElementById('results').innerHTML;
+        }
+
+        function displayResults(results) {
+            const html = results.map(result => {
+                if (!result.lead) return '';
+
+                const lead = result.lead;
+                const score = lead.score;
+
+                return `
+                    <div class="lead-card ${score.tier}">
+                        <div class="lead-header">
+                            <div class="email">${lead.email}</div>
+                            <span class="tier-badge tier-${score.tier}">${score.tier}</span>
+                        </div>
+                        <div class="score">${score.total} / 100</div>
+                        <div class="reasoning">${score.reasoning}</div>
+
+                        <div class="breakdown">
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Ambition</div>
+                                <div class="breakdown-value">${score.breakdown.ambition.toFixed(1)}</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Intelligence</div>
+                                <div class="breakdown-value">${score.breakdown.intelligence.toFixed(1)}</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Kindness</div>
+                                <div class="breakdown-value">${score.breakdown.kindness.toFixed(1)}</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <div class="breakdown-label">Track Record</div>
+                                <div class="breakdown-value">${score.breakdown.trackRecord.toFixed(1)}</div>
+                            </div>
+                        </div>
+
+                        ${renderEnrichmentData(lead.enrichment)}
+                        <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                            Cost: $${lead.costUsd.toFixed(4)} | Enriched: ${new Date(lead.enrichedAt).toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function renderEnrichmentData(enrichment) {
+            let html = '<div class="enrichment-data">';
+
+            if (enrichment.github) {
+                const gh = enrichment.github;
+                html += `
+                    <div class="data-section">
+                        <div class="data-label">🐙 GitHub: @${gh.username}</div>
+                        <div class="data-value">
+                            ${gh.publicRepos} repos · ${gh.totalStars} stars · ${gh.followers} followers<br>
+                            Languages: ${gh.topLanguages.join(', ')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (enrichment.hunter) {
+                const hunter = enrichment.hunter;
+                html += `
+                    <div class="data-section">
+                        <div class="data-label">🔍 Hunter.io</div>
+                        <div class="data-value">
+                            ${hunter.position || 'Unknown position'} at ${hunter.company || 'Unknown company'}<br>
+                            ${hunter.linkedinUrl ? `<a href="${hunter.linkedinUrl}" target="_blank">LinkedIn Profile</a>` : 'No LinkedIn URL'}
+                        </div>
+                    </div>
+                `;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>

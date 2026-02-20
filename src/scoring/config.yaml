@@ -1,0 +1,121 @@
+# ============================================================================
+# LEAD SCORING CONFIGURATION
+# ============================================================================
+# Edit these values to adjust how leads are scored
+# All weights should add up to 100 for each category
+# Total category weights should also add up to 100
+
+# Category weights (must add to 100)
+weights:
+  ambition: 30
+  intelligence: 30
+  kindness: 20
+  trackRecord: 20
+
+# ============================================================================
+# AMBITION SIGNALS (30 points total)
+# ============================================================================
+ambition:
+  github_projects: 10          # Has personal projects on GitHub
+  linkedin_startups: 15         # Founded or early employee at startups
+  linkedin_leadership: 5        # Leadership roles (Manager, Director, VP, etc.)
+
+# ============================================================================
+# INTELLIGENCE SIGNALS (30 points total)
+# ============================================================================
+intelligence:
+  github_languages: 5           # Knows multiple programming languages
+  github_contributions: 10      # High GitHub activity (commits, PRs)
+  linkedin_education: 10        # Quality of education (top schools, advanced degrees)
+  linkedin_certifications: 5    # Relevant certifications
+
+# ============================================================================
+# KINDNESS SIGNALS (20 points total)
+# ============================================================================
+kindness:
+  github_open_source: 10        # Contributes to open source projects
+  linkedin_volunteering: 10     # Volunteer/community work experience
+
+# ============================================================================
+# TRACK RECORD SIGNALS (20 points total)
+# ============================================================================
+trackRecord:
+  github_stars: 5               # Projects with significant stars/adoption
+  linkedin_promotions: 10       # Career progression (promotions, title growth)
+  linkedin_awards: 5            # Awards, honors, recognition
+
+# ============================================================================
+# TIER THRESHOLDS
+# ============================================================================
+# Minimum scores for each tier (0-100 scale)
+tiers:
+  exceptional: 80    # Top tier - proactively invite
+  strong: 65         # Very good - prioritize
+  good: 50           # Good - consider
+  average: 30        # Average - standard process
+
+# ============================================================================
+# SCORING DETAILS (how signals are evaluated)
+# ============================================================================
+scoring_rules:
+  # GitHub Projects
+  github_projects:
+    min_repos: 3                # Need at least 3 repos for points
+    max_score_repos: 10         # Max score at 10+ repos
+
+  # LinkedIn Startups
+  linkedin_startups:
+    founder_multiplier: 2.0     # 2x points if founder
+    early_employee_threshold: 10 # Company size < 10 = startup
+
+  # GitHub Languages
+  github_languages:
+    min_languages: 2            # Need 2+ languages for points
+    max_score_languages: 5      # Max score at 5+ languages
+
+  # GitHub Contributions
+  github_contributions:
+    min_contributions: 100       # Need 100+ contributions for points
+    max_score_contributions: 1000 # Max score at 1000+ contributions
+
+  # GitHub Stars
+  github_stars:
+    min_stars: 50               # Need 50+ stars across all repos
+    max_score_stars: 500        # Max score at 500+ stars
+
+  # GitHub Open Source
+  github_open_source:
+    min_contributions: 10       # Need 10+ contributions to other repos
+    max_score_contributions: 100 # Max score at 100+ contributions
+
+  # LinkedIn Education
+  linkedin_education:
+    top_schools:                # Top schools get bonus points
+      - "Stanford"
+      - "MIT"
+      - "Harvard"
+      - "Berkeley"
+      - "Carnegie Mellon"
+      - "Yale"
+      - "Princeton"
+      - "Columbia"
+      - "University of Pennsylvania"
+      - "Cornell"
+    advanced_degree_bonus: 0.3  # 30% bonus for Masters/PhD
+
+  # LinkedIn Leadership
+  linkedin_leadership:
+    leadership_titles:
+      - "Manager"
+      - "Director"
+      - "VP"
+      - "Head of"
+      - "Lead"
+      - "Chief"
+      - "Founder"
+      - "Co-Founder"
+
+  # LinkedIn Promotions
+  linkedin_promotions:
+    min_years_between: 2        # Promotion every 2 years = good
+    max_score_promotions: 3     # Max score at 3+ promotions
