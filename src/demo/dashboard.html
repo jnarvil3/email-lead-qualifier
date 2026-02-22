@@ -313,15 +313,6 @@
             <button onclick="qualifySingle()">Qualify Lead</button>
         </div>
 
-        <div class="card">
-            <h2 style="margin-bottom: 15px;">Batch Qualify</h2>
-            <div class="input-group">
-                <label>Email Addresses (one per line)</label>
-                <textarea id="batchEmails" placeholder="john@example.com&#10;jane@example.com&#10;bob@example.com"></textarea>
-            </div>
-            <button onclick="qualifyBatch()">Enrich Batch</button>
-        </div>
-
         <div class="results" id="results"></div>
     </div>
 
@@ -365,36 +356,6 @@
             }
         }
 
-        async function qualifyBatch() {
-            const emails = document.getElementById('batchEmails').value
-                .split('\n')
-                .map(e => e.trim())
-                .filter(e => e);
-
-            if (emails.length === 0) {
-                alert('Please enter at least one email address');
-                return;
-            }
-
-            showLoading();
-
-            try {
-                const response = await fetch(`${API_URL}/api/qualify/batch`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ leads: emails.map(email => ({ email })) }),
-                });
-
-                const data = await response.json();
-                displayResults(data.results);
-                displaySummary(data.summary);
-                loadStats(); // Refresh stats
-            } catch (error) {
-                document.getElementById('results').innerHTML =
-                    `<div class="card"><p style="color: red;">Error: ${error.message}</p></div>`;
-            }
-        }
-
         function showLoading() {
             document.getElementById('results').innerHTML = `
                 <div class="loading">
@@ -402,35 +363,6 @@
                     <p>Qualifying leads...</p>
                 </div>
             `;
-        }
-
-        function displaySummary(summary) {
-            const summaryHtml = `
-                <div class="card">
-                    <h3>📊 Batch Summary</h3>
-                    <div class="breakdown">
-                        <div class="breakdown-item">
-                            <div class="breakdown-label">Total</div>
-                            <div class="breakdown-value">${summary.total}</div>
-                        </div>
-                        <div class="breakdown-item">
-                            <div class="breakdown-label">Exceptional</div>
-                            <div class="breakdown-value">${summary.tiers.exceptional}</div>
-                        </div>
-                        <div class="breakdown-item">
-                            <div class="breakdown-label">Strong</div>
-                            <div class="breakdown-value">${summary.tiers.strong}</div>
-                        </div>
-                        <div class="breakdown-item">
-                            <div class="breakdown-label">Total Cost</div>
-                            <div class="breakdown-value">$${(summary.totalCost || 0).toFixed(4)}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('results').innerHTML = summaryHtml +
-                document.getElementById('results').innerHTML;
         }
 
         function displayResults(results) {
@@ -544,9 +476,6 @@
             html += '</div>';
             return html;
         }
-
-        // Load stats on page load
-        loadStats();
     </script>
 </body>
 </html>
