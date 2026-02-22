@@ -274,21 +274,25 @@
     <div class="container">
         <header>
             <h1>🎯 Lead Qualification Demo</h1>
-            <p class="subtitle">Automatically qualify and score leads using GitHub, Hunter.io, and Brave Search data</p>
+            <p class="subtitle">Comprehensive qualification using 4 search APIs: Brave, Serper, Exa, and Tavily</p>
         </header>
 
         <div class="stats" id="stats">
             <div class="stat-card">
-                <div class="stat-label">GitHub Requests</div>
-                <div class="stat-value" id="githubRemaining">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Hunter Searches</div>
-                <div class="stat-value" id="hunterRemaining">--</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Brave Searches</div>
+                <div class="stat-label">Brave Search</div>
                 <div class="stat-value" id="braveRemaining">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Serper</div>
+                <div class="stat-value" id="serperRemaining">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Exa</div>
+                <div class="stat-value" id="exaRemaining">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tavily</div>
+                <div class="stat-value" id="tavilyRemaining">--</div>
             </div>
         </div>
 
@@ -322,21 +326,32 @@
                 const response = await fetch(`${API_URL}/api/stats`);
                 const stats = await response.json();
 
-                document.getElementById('githubRemaining').textContent =
-                    `${stats.github.remaining} / ${stats.github.limit}`;
-
-                if (stats.hunter) {
-                    document.getElementById('hunterRemaining').textContent =
-                        `${stats.hunter.limit - stats.hunter.used} / ${stats.hunter.limit}`;
-                } else {
-                    document.getElementById('hunterRemaining').textContent = 'Not configured';
-                }
-
                 if (stats.brave) {
                     document.getElementById('braveRemaining').textContent =
                         `${stats.brave.limit - stats.brave.used} / ${stats.brave.limit}`;
                 } else {
-                    document.getElementById('braveRemaining').textContent = '2000 / 2000';
+                    document.getElementById('braveRemaining').textContent = 'Not configured';
+                }
+
+                if (stats.serper) {
+                    document.getElementById('serperRemaining').textContent =
+                        `${stats.serper.limit - stats.serper.used} / ${stats.serper.limit}`;
+                } else {
+                    document.getElementById('serperRemaining').textContent = 'Not configured';
+                }
+
+                if (stats.exa) {
+                    document.getElementById('exaRemaining').textContent =
+                        `${stats.exa.limit - stats.exa.used} / ${stats.exa.limit}`;
+                } else {
+                    document.getElementById('exaRemaining').textContent = 'Not configured';
+                }
+
+                if (stats.tavily) {
+                    document.getElementById('tavilyRemaining').textContent =
+                        `${stats.tavily.limit - stats.tavily.used} / ${stats.tavily.limit}`;
+                } else {
+                    document.getElementById('tavilyRemaining').textContent = 'Not configured';
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
@@ -485,6 +500,39 @@
         function renderQualificationData(qualification) {
             let html = '<div class="qualification-data">';
 
+            // NEW: Show Best Achievements Prominently
+            if (qualification.analysis && qualification.analysis.bestAchievements && qualification.analysis.bestAchievements.length > 0) {
+                html += `
+                    <div class="data-section" style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <div class="data-label" style="font-size: 16px; font-weight: 600; margin-bottom: 10px;">🏆 Best Achievements</div>
+                        <div class="data-value">
+                            <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+                                ${qualification.analysis.bestAchievements.map(achievement =>
+                                    `<li style="margin-bottom: 8px;"><strong>${achievement}</strong></li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+                        ${qualification.analysis.confidence ?
+                            `<div style="margin-top: 10px; font-size: 12px; color: #666;">
+                                Confidence: ${qualification.analysis.confidence}%
+                            </div>` : ''}
+                    </div>
+                `;
+            }
+
+            // Show search results count
+            if (qualification.searchResults && qualification.searchResults.length > 0) {
+                html += `
+                    <div class="data-section">
+                        <div class="data-label">🔍 Search Results</div>
+                        <div class="data-value">
+                            Found ${qualification.searchResults.length} results across Brave, Serper, Exa, and Tavily
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Legacy support for old qualification structure
             if (qualification.github) {
                 const gh = qualification.github;
                 html += `
