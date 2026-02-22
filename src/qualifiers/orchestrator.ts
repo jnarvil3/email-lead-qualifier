@@ -114,16 +114,27 @@ export class QualificationOrchestrator {
 
     console.log('  → Step 3: Analyzing with AI...');
 
-    const analysis = await this.geminiExtractor.analyzeAndRank({
-      personName: fullName,
-      email: lead.email,
-      searchResults: allSearchResults,
-    });
+    let analysis;
+    try {
+      analysis = await this.geminiExtractor.analyzeAndRank({
+        personName: fullName,
+        email: lead.email,
+        searchResults: allSearchResults,
+      });
 
-    console.log(`    ✓ Analysis complete`);
-    console.log(`    → Score: ${analysis.score}/100 (${analysis.tier})`);
-    console.log(`    → Confidence: ${analysis.confidence}%`);
-    console.log(`    → Best achievements: ${analysis.bestAchievements.length}`);
+      console.log(`    ✓ Analysis complete`);
+      console.log(`    → Score: ${analysis.score}/100 (${analysis.tier})`);
+      console.log(`    → Confidence: ${analysis.confidence}%`);
+      console.log(`    → Best achievements: ${analysis.bestAchievements.length}`);
+    } catch (error: any) {
+      console.log(`    ✗ Analysis failed: ${error.message}`);
+      return {
+        success: false,
+        lead: null,
+        costUsd: 0.01, // We still used API credits for search
+        error: error.message,
+      };
+    }
 
     // ========================================================================
     // STEP 4: Build Qualified Lead
