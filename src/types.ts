@@ -15,6 +15,17 @@ export interface QualifiedLead extends Lead {
     linkedin?: LinkedInProfile;
     hunter?: HunterProfile;
     founder?: FounderProfile;
+    // NEW: For updated flow with multiple search APIs
+    searchResults?: any[];
+    analysis?: {
+      score: number;
+      tier: 'exceptional' | 'strong' | 'good' | 'average' | 'weak';
+      breakdown: { ambition: number; intelligence: number; kindness: number; trackRecord: number };
+      bestAchievements: string[];
+      signals: any;
+      confidence: number;
+      reasoning: string;
+    };
   };
   score: LeadScore;
   qualifiedAt: Date;

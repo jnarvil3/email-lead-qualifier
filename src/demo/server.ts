@@ -12,11 +12,7 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const orchestrator = new QualificationOrchestrator({
-  githubToken: process.env.GITHUB_TOKEN,
-  hunterApiKey: process.env.HUNTER_API_KEY,
-  geminiApiKey: process.env.GEMINI_API_KEY,
-});
+const orchestrator = new QualificationOrchestrator();
 
 // Health check
 app.get('/api/health', (req, res) => {

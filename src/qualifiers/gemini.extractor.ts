@@ -256,4 +256,138 @@ Extract now:`;
       dataSources: [],
     };
   }
+
+  /**
+   * NEW: Comprehensive analysis and ranking based on ALL search results
+   * This is the main method for the new qualification flow
+   */
+  async analyzeAndRank(input: {
+    personName: string;
+    email: string;
+    searchResults: any[];
+  }): Promise<{
+    score: number;
+    tier: 'exceptional' | 'strong' | 'good' | 'average' | 'weak';
+    breakdown: { ambition: number; intelligence: number; kindness: number; trackRecord: number };
+    bestAchievements: string[];
+    signals: any;
+    confidence: number;
+    reasoning: string;
+  }> {
+    try {
+      // Prepare search results context
+      const searchContext = input.searchResults
+        .slice(0, 30) // Use top 30 results
+        .map((result, i) => `
+[Result ${i + 1}]
+Title: ${result.title || 'N/A'}
+URL: ${result.url || 'N/A'}
+Content: ${result.snippet || result.content || result.description || 'N/A'}
+`)
+        .join('\n');
+
+      const prompt = `You are an expert at evaluating founders and entrepreneurs. Analyze the following person based on search results and score them on these 4 criteria:
+
+1. **Ambitious** (0-30 points): Companies founded, leadership roles, thought leadership, bold vision
+2. **Intelligent** (0-30 points): Top education, strategic accomplishments, problem-solving ability
+3. **Kind** (0-20 points): Volunteer work, mentorship, community building, helping others
+4. **Proven Track Record** (0-20 points): Funding raised, successful exits, press mentions, awards
+
+Person: ${input.personName}
+Email: ${input.email}
+
+Search Results:
+${searchContext}
+
+Based on ALL the search results above, provide a comprehensive analysis in JSON format:
+
+{
+  "ambition": <score 0-30>,
+  "intelligence": <score 0-30>,
+  "kindness": <score 0-20>,
+  "trackRecord": <score 0-20>,
+  "bestAchievements": [
+    "Achievement 1 (be specific with company names, amounts, years)",
+    "Achievement 2",
+    "Achievement 3",
+    "Achievement 4",
+    "Achievement 5"
+  ],
+  "confidence": <0-100, how confident are you in this assessment>,
+  "reasoning": "<2-3 sentence summary explaining the score>",
+  "signals": {
+    "companiesFounded": ["Company 1", "Company 2"],
+    "fundingRaised": ["Series A $10M", "Series B $50M"],
+    "exits": ["Acquired by X for $Y"],
+    "pressMentions": ["Featured in Forbes", "TechCrunch article"],
+    "education": ["Harvard MBA", "MIT CS"],
+    "leadershipRoles": ["CEO of X", "VP at Y"]
+  }
+}
+
+IMPORTANT:
+- Only include achievements that are clearly mentioned in the search results
+- Be specific with numbers, company names, and years when available
+- If little/no information is found, give low scores and say so in reasoning
+- List the TOP 5-10 most impressive achievements in order of significance
+- Score fairly but generously - reward documented accomplishments
+
+Return ONLY the JSON, no other text.`;
+
+      const result = await this.model.generateContent(prompt);
+      const response = result.response.text().trim();
+
+      // Parse AI response
+      let jsonText = response;
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/g, '');
+      }
+
+      const parsed = JSON.parse(jsonText);
+
+      // Calculate total score and tier
+      const totalScore =
+        (parsed.ambition || 0) +
+        (parsed.intelligence || 0) +
+        (parsed.kindness || 0) +
+        (parsed.trackRecord || 0);
+
+      let tier: 'exceptional' | 'strong' | 'good' | 'average' | 'weak';
+      if (totalScore >= 80) tier = 'exceptional';
+      else if (totalScore >= 65) tier = 'strong';
+      else if (totalScore >= 50) tier = 'good';
+      else if (totalScore >= 30) tier = 'average';
+      else tier = 'weak';
+
+      return {
+        score: totalScore,
+        tier,
+        breakdown: {
+          ambition: parsed.ambition || 0,
+          intelligence: parsed.intelligence || 0,
+          kindness: parsed.kindness || 0,
+          trackRecord: parsed.trackRecord || 0,
+        },
+        bestAchievements: parsed.bestAchievements || [],
+        signals: parsed.signals || {},
+        confidence: parsed.confidence || 0,
+        reasoning: parsed.reasoning || 'No analysis available',
+      };
+    } catch (error: any) {
+      console.error('AI analysis failed:', error.message);
+
+      // Return default low score
+      return {
+        score: 0,
+        tier: 'weak',
+        breakdown: { ambition: 0, intelligence: 0, kindness: 0, trackRecord: 0 },
+        bestAchievements: [],
+        signals: {},
+        confidence: 0,
+        reasoning: 'Failed to analyze - insufficient data or API error',
+      };
+    }
+  }
 }

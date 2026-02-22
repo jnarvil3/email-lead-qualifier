@@ -56,21 +56,31 @@ Environment variables required:
   console.log('📊 API Usage Limits:');
   try {
     const stats = await orchestrator.getStats();
-    console.log(`   GitHub: ${stats.github.remaining}/${stats.github.limit} requests remaining`);
-    if (stats.hunter) {
-      console.log(`   Hunter: ${stats.hunter.used}/${stats.hunter.limit} searches used this month`);
-    } else {
-      console.log(`   Hunter: Not configured (set HUNTER_API_KEY)`);
+    if (stats.brave) {
+      console.log(`   Brave Search: ${stats.brave.limit - stats.brave.used}/${stats.brave.limit} searches remaining`);
+    }
+    if (stats.serper) {
+      console.log(`   Serper: ${stats.serper.limit - stats.serper.used}/${stats.serper.limit} searches remaining`);
+    }
+    if (stats.exa) {
+      console.log(`   Exa: ${stats.exa.limit - stats.exa.used}/${stats.exa.limit} searches remaining`);
+    }
+    if (stats.tavily) {
+      console.log(`   Tavily: ${stats.tavily.limit - stats.tavily.used}/${stats.tavily.limit} searches remaining`);
     }
   } catch (error) {
     console.log('   Could not fetch API stats');
   }
 
-  // Enrich leads
+  // Qualify leads
   const results = await orchestrator.qualifyLeads(leads, {
     maxConcurrent: 2,
     onProgress: (current, total, lead) => {
-      console.log(`\n[${current}/${total}] ✓ ${lead.email} → ${lead.score.tier} (${lead.score.total}/100)`);
+      if (lead) {
+        console.log(`\n[${current}/${total}] ✓ ${lead.email} → ${lead.score.tier} (${lead.score.total}/100)`);
+      } else {
+        console.log(`\n[${current}/${total}] ✗ Qualification failed`);
+      }
     },
   });
 
