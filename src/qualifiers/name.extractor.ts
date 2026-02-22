@@ -126,13 +126,13 @@ Name:`;
       return this.validateName(extractedName);
     }
 
-    console.log(`    ✗ Could not extract name from email`);
+    // If extraction failed, use email address for searching
+    console.log(`    ⚠ Could not extract name - will use email for search`);
     return {
-      isValid: false,
+      isValid: true, // Mark as valid so we don't block qualification
       firstName: null,
       lastName: null,
-      fullName: null,
-      error: 'Name required - could not extract from email',
+      fullName: email, // Use email as fallback for searching
     };
   }
 }

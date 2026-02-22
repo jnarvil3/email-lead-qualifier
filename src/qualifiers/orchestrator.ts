@@ -53,7 +53,12 @@ export class QualificationOrchestrator {
     }
 
     const fullName = nameResult.fullName;
-    console.log(`    ✓ Full name: ${fullName}`);
+    const isUsingEmail = fullName === lead.email;
+    if (isUsingEmail) {
+      console.log(`    ⚠ Using email for search: ${fullName}`);
+    } else {
+      console.log(`    ✓ Full name: ${fullName}`);
+    }
 
     // ========================================================================
     // STEP 2: Search ALL APIs in Parallel
