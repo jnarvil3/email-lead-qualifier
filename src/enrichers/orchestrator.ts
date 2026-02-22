@@ -1,7 +1,7 @@
 import { GitHubEnricher } from './github.enricher';
 import { HunterEnricher } from './hunter.enricher';
 import { LinkedInCrawler } from './linkedin.crawler';
-import { GoogleSearchCrawler } from './google-search.crawler';
+import { BraveSearchEnricher } from './brave-search.enricher';
 import { GeminiExtractor } from './gemini.extractor';
 import { LeadScorer } from '../scoring/scorer';
 import { Lead, EnrichedLead, EnrichmentResult } from '../types';
@@ -10,7 +10,7 @@ export class EnrichmentOrchestrator {
   private githubEnricher: GitHubEnricher;
   private hunterEnricher: HunterEnricher;
   private linkedinCrawler: LinkedInCrawler;
-  private googleSearchCrawler: GoogleSearchCrawler;
+  private braveSearchEnricher: BraveSearchEnricher;
   private geminiExtractor: GeminiExtractor | null;
   private scorer: LeadScorer;
 
@@ -18,12 +18,13 @@ export class EnrichmentOrchestrator {
     githubToken?: string;
     hunterApiKey?: string;
     geminiApiKey?: string;
+    braveSearchApiKey?: string;
     scoringConfigPath?: string;
   }) {
     this.githubEnricher = new GitHubEnricher(config?.githubToken);
     this.hunterEnricher = new HunterEnricher(config?.hunterApiKey);
     this.linkedinCrawler = new LinkedInCrawler();
-    this.googleSearchCrawler = new GoogleSearchCrawler();
+    this.braveSearchEnricher = new BraveSearchEnricher();
 
     // Gemini is optional - only initialize if API key provided
     try {
@@ -119,8 +120,22 @@ export class EnrichmentOrchestrator {
           linkedinData = await this.linkedinCrawler.crawlProfile(hunterData.linkedinUrl);
         }
 
-        // Step 2: Search Google for press mentions
-        const searchResults = await this.googleSearchCrawler.searchAndCrawl(personName);
+        // Step 2: Search Brave for press mentions and founder info
+        const braveSearchData = await this.braveSearchEnricher.searchPerson(personName);
+
+        // Also search for funding information
+        const companyName = hunterData.company || undefined;
+        const fundingResults = await this.braveSearchEnricher.searchFunding(personName, companyName);
+        const pressResults = await this.braveSearchEnricher.searchPress(personName);
+
+        // Combine all search results
+        const searchResults = [
+          ...braveSearchData.results,
+          ...fundingResults,
+          ...pressResults
+        ].slice(0, 20); // Limit to top 20 results
+
+        console.log(`    → Found ${searchResults.length} search results from Brave`);
 
         // Step 3: Extract founder signals with AI
         if (linkedinData || searchResults.length > 0) {
@@ -141,7 +156,6 @@ export class EnrichmentOrchestrator {
       } finally {
         // Cleanup crawlers
         await this.linkedinCrawler.close();
-        await this.googleSearchCrawler.close();
       }
     } else if (!this.geminiExtractor) {
       console.log('  ⊘ Skipping founder enrichment (no Gemini API key)');

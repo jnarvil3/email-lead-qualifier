@@ -79,7 +79,8 @@ export class GeminiExtractor {
     }
 
     this.genAI = new GoogleGenerativeAI(key);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Try the base model name
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
   }
 
   /**
