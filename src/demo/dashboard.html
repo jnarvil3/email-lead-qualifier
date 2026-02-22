@@ -415,7 +415,7 @@
                         </div>
                         <div class="breakdown-item">
                             <div class="breakdown-label">Total Cost</div>
-                            <div class="breakdown-value">$${summary.totalCost.toFixed(4)}</div>
+                            <div class="breakdown-value">$${(summary.totalCost || 0).toFixed(4)}</div>
                         </div>
                     </div>
                 </div>
@@ -444,25 +444,25 @@
                         <div class="breakdown">
                             <div class="breakdown-item">
                                 <div class="breakdown-label">Ambition</div>
-                                <div class="breakdown-value">${score.breakdown.ambition.toFixed(1)}</div>
+                                <div class="breakdown-value">${(score.breakdown.ambition || 0).toFixed(1)}</div>
                             </div>
                             <div class="breakdown-item">
                                 <div class="breakdown-label">Intelligence</div>
-                                <div class="breakdown-value">${score.breakdown.intelligence.toFixed(1)}</div>
+                                <div class="breakdown-value">${(score.breakdown.intelligence || 0).toFixed(1)}</div>
                             </div>
                             <div class="breakdown-item">
                                 <div class="breakdown-label">Kindness</div>
-                                <div class="breakdown-value">${score.breakdown.kindness.toFixed(1)}</div>
+                                <div class="breakdown-value">${(score.breakdown.kindness || 0).toFixed(1)}</div>
                             </div>
                             <div class="breakdown-item">
                                 <div class="breakdown-label">Track Record</div>
-                                <div class="breakdown-value">${score.breakdown.trackRecord.toFixed(1)}</div>
+                                <div class="breakdown-value">${(score.breakdown.trackRecord || 0).toFixed(1)}</div>
                             </div>
                         </div>
 
                         ${renderEnrichmentData(lead.enrichment)}
                         <div style="margin-top: 10px; color: #999; font-size: 12px;">
-                            Cost: $${lead.costUsd.toFixed(4)} | Enriched: ${new Date(lead.enrichedAt).toLocaleString()}
+                            Cost: $${(lead.costUsd || 0).toFixed(4)} | Enriched: ${new Date(lead.enrichedAt).toLocaleString()}
                         </div>
                     </div>
                 `;

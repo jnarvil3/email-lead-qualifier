@@ -1,20 +1,38 @@
 import { GitHubEnricher } from './github.enricher';
 import { HunterEnricher } from './hunter.enricher';
+import { LinkedInCrawler } from './linkedin.crawler';
+import { GoogleSearchCrawler } from './google-search.crawler';
+import { GeminiExtractor } from './gemini.extractor';
 import { LeadScorer } from '../scoring/scorer';
 import { Lead, EnrichedLead, EnrichmentResult } from '../types';
 
 export class EnrichmentOrchestrator {
   private githubEnricher: GitHubEnricher;
   private hunterEnricher: HunterEnricher;
+  private linkedinCrawler: LinkedInCrawler;
+  private googleSearchCrawler: GoogleSearchCrawler;
+  private geminiExtractor: GeminiExtractor | null;
   private scorer: LeadScorer;
 
   constructor(config?: {
     githubToken?: string;
     hunterApiKey?: string;
+    geminiApiKey?: string;
     scoringConfigPath?: string;
   }) {
     this.githubEnricher = new GitHubEnricher(config?.githubToken);
     this.hunterEnricher = new HunterEnricher(config?.hunterApiKey);
+    this.linkedinCrawler = new LinkedInCrawler();
+    this.googleSearchCrawler = new GoogleSearchCrawler();
+
+    // Gemini is optional - only initialize if API key provided
+    try {
+      this.geminiExtractor = new GeminiExtractor(config?.geminiApiKey);
+    } catch (error) {
+      console.warn('Gemini API key not provided - founder enrichment will be skipped');
+      this.geminiExtractor = null;
+    }
+
     this.scorer = new LeadScorer(config?.scoringConfigPath);
   }
 
@@ -84,7 +102,53 @@ export class EnrichmentOrchestrator {
     }
 
     // ========================================================================
-    // 3. Score the lead
+    // 3. Founder Enrichment (FREE with Gemini - 1,500/day)
+    // ========================================================================
+    if (this.geminiExtractor && enrichedLead.enrichment.hunter) {
+      try {
+        console.log('  → Enriching founder data...');
+
+        const hunterData = enrichedLead.enrichment.hunter;
+        const personName = hunterData.firstName && hunterData.lastName
+          ? `${hunterData.firstName} ${hunterData.lastName}`
+          : lead.name || lead.email.split('@')[0];
+
+        // Step 1: Crawl LinkedIn profile if available
+        let linkedinData = null;
+        if (hunterData.linkedinUrl) {
+          linkedinData = await this.linkedinCrawler.crawlProfile(hunterData.linkedinUrl);
+        }
+
+        // Step 2: Search Google for press mentions
+        const searchResults = await this.googleSearchCrawler.searchAndCrawl(personName);
+
+        // Step 3: Extract founder signals with AI
+        if (linkedinData || searchResults.length > 0) {
+          const founderSignals = await this.geminiExtractor.extractFounderSignals(
+            linkedinData,
+            searchResults,
+            personName
+          );
+
+          enrichedLead.enrichment.founder = founderSignals;
+
+          console.log(`    ✓ Founder enrichment complete (confidence: ${founderSignals.confidence}%)`);
+        } else {
+          console.log('    ✗ No data available for founder enrichment');
+        }
+      } catch (error: any) {
+        console.error('    ✗ Founder enrichment failed:', error.message);
+      } finally {
+        // Cleanup crawlers
+        await this.linkedinCrawler.close();
+        await this.googleSearchCrawler.close();
+      }
+    } else if (!this.geminiExtractor) {
+      console.log('  ⊘ Skipping founder enrichment (no Gemini API key)');
+    }
+
+    // ========================================================================
+    // 4. Score the lead
     // ========================================================================
     try {
       console.log('  → Calculating score...');

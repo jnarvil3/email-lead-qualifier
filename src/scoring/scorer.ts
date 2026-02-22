@@ -218,6 +218,143 @@ export class LeadScorer {
     breakdown.trackRecord = trackRecordScore;
 
     // ========================================================================
+    // FOUNDER-SPECIFIC SCORING (if founder data available)
+    // ========================================================================
+    if (lead.enrichment.founder) {
+      const founder = lead.enrichment.founder;
+
+      // AMBITION: Companies Founded
+      if (founder.companiesFounded.length > 0) {
+        const config = this.config.scoring_rules?.companies_founded;
+        const pointsPerCompany = config?.points_per_company || 7.5;
+        const maxCompanies = config?.max_companies || 2;
+        const companiesScore = Math.min(founder.companiesFounded.length, maxCompanies) * pointsPerCompany;
+        signals.companiesFounded = companiesScore;
+        ambitionScore += companiesScore;
+      }
+
+      // AMBITION: Leadership Roles
+      if (founder.leadershipRoles.length > 0) {
+        const config = this.config.scoring_rules?.leadership_roles;
+        let leadershipScore = 0;
+        for (const role of founder.leadershipRoles) {
+          const isCLevel = role.title.toLowerCase().includes('ceo') ||
+                          role.title.toLowerCase().includes('cto') ||
+                          role.title.toLowerCase().includes('chief');
+          const isVP = role.title.toLowerCase().includes('vp') ||
+                      role.title.toLowerCase().includes('director');
+
+          if (isCLevel) {
+            leadershipScore += 5 * (config?.ceo_cto_multiplier || 2.0);
+          } else if (isVP) {
+            leadershipScore += 3 * (config?.vp_director_multiplier || 1.5);
+          }
+        }
+        signals.leadershipRoles = Math.min(leadershipScore, this.config.ambition.leadership_roles || 10);
+        ambitionScore += signals.leadershipRoles;
+      }
+
+      // AMBITION: Thought Leadership
+      if (founder.thoughtLeadership.speaking || founder.thoughtLeadership.writing || founder.thoughtLeadership.podcasting) {
+        const config = this.config.scoring_rules?.thought_leadership;
+        let tlScore = 0;
+        if (founder.thoughtLeadership.speaking) tlScore += config?.speaking_points || 2;
+        if (founder.thoughtLeadership.writing) tlScore += config?.writing_points || 2;
+        if (founder.thoughtLeadership.podcasting) tlScore += config?.podcasting_points || 1;
+        signals.thoughtLeadership = Math.min(tlScore, this.config.ambition.thought_leadership || 5);
+        ambitionScore += signals.thoughtLeadership;
+      }
+
+      // INTELLIGENCE: Top Education
+      if (founder.topEducation.length > 0) {
+        const config = this.config.scoring_rules?.top_education;
+        const topEdu = founder.topEducation[0];
+        let eduScore = 0;
+        if (topEdu.isTopTier) {
+          eduScore = config?.top_tier_points || 15;
+        } else {
+          eduScore = config?.top_50_points || 10;
+        }
+        // Bonus for advanced degree
+        if (topEdu.degree?.toLowerCase().includes('master') ||
+            topEdu.degree?.toLowerCase().includes('phd') ||
+            topEdu.degree?.toLowerCase().includes('doctorate')) {
+          eduScore += config?.advanced_degree_bonus || 3;
+        }
+        signals.topEducation = Math.min(eduScore, this.config.intelligence.top_education || 15);
+        intelligenceScore += signals.topEducation;
+      }
+
+      // INTELLIGENCE: Strategic Accomplishments
+      if (founder.strategicAccomplishments.length > 0) {
+        const accompScore = Math.min(founder.strategicAccomplishments.length * 3, this.config.intelligence.strategic_accomplishments || 10);
+        signals.strategicAccomplishments = accompScore;
+        intelligenceScore += accompScore;
+      }
+
+      // KINDNESS: Volunteer Work
+      if (founder.volunteerWork.length > 0) {
+        signals.volunteerWork = this.config.kindness.volunteer_work || 10;
+        kindnessScore += signals.volunteerWork;
+      }
+
+      // KINDNESS: Mentorship
+      if (founder.mentorship.isMentor) {
+        signals.mentorship = this.config.kindness.mentorship || 5;
+        kindnessScore += signals.mentorship;
+      }
+
+      // KINDNESS: Community Building
+      if (founder.communityBuilding.length > 0) {
+        signals.communityBuilding = this.config.kindness.community_building || 5;
+        kindnessScore += signals.communityBuilding;
+      }
+
+      // TRACK RECORD: Funding Raised
+      if (founder.fundingRaised.length > 0) {
+        const config = this.config.scoring_rules?.funding_raised;
+        let fundingScore = 0;
+        for (const funding of founder.fundingRaised) {
+          const round = funding.round?.toLowerCase() || '';
+          if (round.includes('series b') || round.includes('series c')) {
+            fundingScore += config?.series_b_plus_points || 10;
+          } else if (round.includes('series a')) {
+            fundingScore += config?.series_a_points || 5;
+          } else if (round.includes('seed')) {
+            fundingScore += config?.seed_points || 2;
+          }
+        }
+        signals.fundingRaised = Math.min(fundingScore, this.config.trackRecord.funding_raised || 10);
+        trackRecordScore += signals.fundingRaised;
+      }
+
+      // TRACK RECORD: Exits
+      if (founder.exits.length > 0) {
+        const config = this.config.scoring_rules?.exits;
+        const exitsScore = founder.exits.length * (config?.acquisition_points || 5);
+        signals.exits = Math.min(exitsScore, this.config.trackRecord.exits || 5);
+        trackRecordScore += signals.exits;
+      }
+
+      // TRACK RECORD: Press Mentions
+      if (founder.pressMentions.length > 0) {
+        const config = this.config.scoring_rules?.press_mentions;
+        const pressScore = Math.min(
+          founder.pressMentions.length * (config?.points_per_mention || 1),
+          config?.max_mentions || 3
+        );
+        signals.pressMentions = pressScore;
+        trackRecordScore += pressScore;
+      }
+
+      // Update breakdowns with founder signals
+      breakdown.ambition = ambitionScore;
+      breakdown.intelligence = intelligenceScore;
+      breakdown.kindness = kindnessScore;
+      breakdown.trackRecord = trackRecordScore;
+    }
+
+    // ========================================================================
     // CALCULATE TOTAL SCORE
     // ========================================================================
     totalScore = breakdown.ambition + breakdown.intelligence +
@@ -255,40 +392,59 @@ export class LeadScorer {
   private generateReasoning(lead: EnrichedLead, signals: ScoringSignals, tier: string): string {
     const reasons: string[] = [];
 
-    // Ambition highlights
-    if (signals.githubProjects) {
-      reasons.push(`${lead.enrichment.github!.publicRepos} GitHub projects`);
-    }
-    if (signals.linkedinStartups) {
-      reasons.push('Startup founder/early employee');
-    }
-    if (signals.linkedinLeadership) {
-      reasons.push('Leadership experience');
+    // FOUNDER SIGNALS (priority)
+    if (lead.enrichment.founder) {
+      const founder = lead.enrichment.founder;
+
+      // Ambition
+      if (signals.companiesFounded && founder.companiesFounded.length > 0) {
+        const companies = founder.companiesFounded.map(c => c.name).join(', ');
+        reasons.push(`Founded: ${companies}`);
+      }
+      if (signals.leadershipRoles && founder.leadershipRoles.length > 0) {
+        const roles = founder.leadershipRoles.slice(0, 2).map(r => `${r.title} at ${r.company}`).join(', ');
+        reasons.push(roles);
+      }
+      if (signals.thoughtLeadership) {
+        reasons.push('Thought leader (speaking/writing)');
+      }
+
+      // Intelligence
+      if (signals.topEducation && founder.topEducation.length > 0) {
+        const edu = founder.topEducation[0];
+        reasons.push(`${edu.school}${edu.degree ? ' - ' + edu.degree : ''}`);
+      }
+
+      // Track Record
+      if (signals.fundingRaised && founder.fundingRaised.length > 0) {
+        const rounds = founder.fundingRaised.map(f => f.round || 'funding').join(', ');
+        reasons.push(`Raised: ${rounds}`);
+      }
+      if (signals.exits && founder.exits.length > 0) {
+        reasons.push(`${founder.exits.length} exit${founder.exits.length > 1 ? 's' : ''}`);
+      }
+      if (signals.pressMentions && founder.pressMentions.length > 0) {
+        reasons.push(`${founder.pressMentions.length} press mention${founder.pressMentions.length > 1 ? 's' : ''}`);
+      }
+
+      // Kindness
+      if (signals.volunteerWork && founder.volunteerWork.length > 0) {
+        reasons.push(`Volunteer: ${founder.volunteerWork[0].organization}`);
+      }
+      if (signals.mentorship) {
+        reasons.push('Active mentor');
+      }
     }
 
-    // Intelligence highlights
-    if (signals.githubLanguages) {
-      reasons.push(`${lead.enrichment.github!.topLanguages.length} programming languages`);
+    // GITHUB SIGNALS (for technical founders or devs)
+    if (signals.githubProjects && lead.enrichment.github) {
+      reasons.push(`${lead.enrichment.github.publicRepos} GitHub projects`);
     }
-    if (signals.githubContributions) {
-      reasons.push(`${lead.enrichment.github!.contributions.lastYear} contributions last year`);
+    if (signals.githubStars && lead.enrichment.github) {
+      reasons.push(`${lead.enrichment.github.totalStars} GitHub stars`);
     }
-    if (signals.linkedinEducation) {
-      const school = lead.enrichment.linkedin!.education[0]?.school;
-      reasons.push(`Education: ${school}`);
-    }
-
-    // Kindness highlights
-    if (signals.githubOpenSource) {
-      reasons.push(`${lead.enrichment.github!.openSourceContributions} open source contributions`);
-    }
-    if (signals.linkedinVolunteering) {
-      reasons.push('Volunteer experience');
-    }
-
-    // Track record highlights
-    if (signals.githubStars) {
-      reasons.push(`${lead.enrichment.github!.totalStars} GitHub stars`);
+    if (signals.githubOpenSource && lead.enrichment.github) {
+      reasons.push(`${lead.enrichment.github.openSourceContributions} open source contributions`);
     }
 
     if (reasons.length === 0) {

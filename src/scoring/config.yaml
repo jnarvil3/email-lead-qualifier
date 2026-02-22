@@ -16,23 +16,39 @@ weights:
 # AMBITION SIGNALS (30 points total)
 # ============================================================================
 ambition:
-  github_projects: 10          # Has personal projects on GitHub
-  linkedin_startups: 15         # Founded or early employee at startups
-  linkedin_leadership: 5        # Leadership roles (Manager, Director, VP, etc.)
+  # Founder signals
+  companies_founded: 15         # Companies founded or co-founded
+  leadership_roles: 10          # Senior leadership positions (CEO, VP, Director)
+  thought_leadership: 5         # Speaking, writing, podcasting
+  # Dev/GitHub signals (backward compatibility)
+  github_projects: 5            # Has personal projects on GitHub
+  linkedin_startups: 15         # Founded or early employee at startups (if no founder data)
+  linkedin_leadership: 5        # Leadership roles (if no founder data)
 
 # ============================================================================
 # INTELLIGENCE SIGNALS (30 points total)
 # ============================================================================
 intelligence:
+  # Founder signals
+  top_education: 15             # Top-tier university education
+  strategic_accomplishments: 10 # Major achievements, problem-solving at scale
+  # Dev/GitHub signals (backward compatibility)
   github_languages: 5           # Knows multiple programming languages
   github_contributions: 10      # High GitHub activity (commits, PRs)
-  linkedin_education: 10        # Quality of education (top schools, advanced degrees)
-  linkedin_certifications: 5    # Relevant certifications
+  linkedin_education: 10        # Quality of education (if no founder data)
+  linkedin_certifications: 5    # Relevant certifications (if no founder data)
+  technical_skills: 5           # Programming languages, GitHub activity
+  certifications: 5             # Relevant certifications and continuous learning
 
 # ============================================================================
 # KINDNESS SIGNALS (20 points total)
 # ============================================================================
 kindness:
+  # Founder signals
+  volunteer_work: 10            # Nonprofit boards, volunteering, social impact
+  mentorship: 5                 # Mentoring, advising, helping others
+  community_building: 5         # Building communities, open source contributions
+  # Dev/GitHub signals (backward compatibility)
   github_open_source: 10        # Contributes to open source projects
   linkedin_volunteering: 10     # Volunteer/community work experience
 
@@ -40,9 +56,15 @@ kindness:
 # TRACK RECORD SIGNALS (20 points total)
 # ============================================================================
 trackRecord:
+  # Founder signals
+  funding_raised: 10            # Successfully raised funding for companies
+  exits: 5                      # Company exits (acquisition, IPO)
+  press_mentions: 3             # Press coverage, thought leadership recognition
+  awards: 2                     # Awards, honors, recognition
+  # Dev/GitHub signals (backward compatibility)
   github_stars: 5               # Projects with significant stars/adoption
   linkedin_promotions: 10       # Career progression (promotions, title growth)
-  linkedin_awards: 5            # Awards, honors, recognition
+  linkedin_awards: 5            # Awards, honors, recognition (if no founder data)
 
 # ============================================================================
 # TIER THRESHOLDS
@@ -119,3 +141,43 @@ scoring_rules:
   linkedin_promotions:
     min_years_between: 2        # Promotion every 2 years = good
     max_score_promotions: 3     # Max score at 3+ promotions
+
+  # FOUNDER-SPECIFIC RULES
+  # Companies Founded
+  companies_founded:
+    points_per_company: 7.5     # 7.5 points per company (max 2 companies = 15 pts)
+    max_companies: 2            # Cap at 2 companies for scoring
+
+  # Leadership Roles
+  leadership_roles:
+    ceo_cto_multiplier: 2.0     # CEO/CTO roles worth 2x
+    vp_director_multiplier: 1.5 # VP/Director worth 1.5x
+    years_threshold: 2          # Need 2+ years in role
+
+  # Thought Leadership
+  thought_leadership:
+    speaking_points: 2          # Speaking engagements
+    writing_points: 2           # Published articles/books
+    podcasting_points: 1        # Podcasts/interviews
+
+  # Top Education
+  top_education:
+    top_tier_points: 15         # Full 15 points for Ivy League/Stanford/MIT
+    top_50_points: 10           # 10 points for top 50 universities
+    advanced_degree_bonus: 3    # +3 points for Masters/PhD
+
+  # Funding Raised
+  funding_raised:
+    seed_points: 2              # Seed round
+    series_a_points: 5          # Series A+
+    series_b_plus_points: 10    # Series B or higher
+
+  # Exits
+  exits:
+    acquisition_points: 5       # Company acquired
+    ipo_points: 5               # Company went public
+
+  # Press Mentions
+  press_mentions:
+    points_per_mention: 1       # 1 point per significant press mention
+    max_mentions: 3             # Cap at 3 mentions

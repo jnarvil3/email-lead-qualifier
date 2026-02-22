@@ -1,12 +1,97 @@
 # Next Steps - Email Lead Enricher
 
-## Current Status ✅
+## Current Status ⚠️
 
 - [x] Project fully built and working
 - [x] TypeScript compilation successful
 - [x] Demo server tested and running
 - [x] Pushed to GitHub: https://github.com/jnarvil3/email-lead-enricher
 - [x] Comprehensive README with Getting Started guide
+- [x] GitHub API enrichment - Working well ✅
+- [x] Hunter.io API enrichment - Working ✅
+- [x] Gemini AI extractor - Built and ready ✅
+- [x] Scoring system for founders - Complete ✅
+- [⚠️] LinkedIn crawler - Unreliable, violates ToS ❌
+- [⚠️] Google search crawler - Returns 0 results ❌
+
+## CRITICAL ISSUE: Web Crawlers Not Working
+
+**Problem**: The web crawlers (LinkedIn + Google Search) are not working effectively:
+- LinkedIn blocks scrapers ~70-80% of the time
+- Google search returns 0 results even for real founders
+- Very slow (15-30 seconds total)
+- Violates LinkedIn Terms of Service
+- Low overall data success rate (~10-20% of leads get rich data)
+
+**Impact**: Can't find founder signals (companies founded, funding, press mentions, etc.)
+
+## PRIORITY 1: Research & Replace Web Crawlers
+
+### Research Tasks (Use ChatGPT/Claude for deep research)
+
+**Goal**: Find reliable APIs to replace Playwright web crawlers
+
+**Research Questions**:
+1. **Search APIs** - Which can find public info about a person from their name?
+   - Brave Search API (2,000 free/month)?
+   - Serper.dev (2,500 free/month)?
+   - SerpAPI?
+   - Perplexity AI API?
+   - You.com API?
+
+2. **People/LinkedIn Data APIs** - Which can get LinkedIn data legally?
+   - Proxycurl (LinkedIn API)?
+   - People Data Labs?
+   - Clearbit?
+   - FullContact?
+   - RocketReach?
+   - Apollo.io?
+
+3. **Startup/Funding Data APIs**
+   - Crunchbase API (expensive)?
+   - Alternative funding databases?
+   - News APIs for startup announcements?
+
+**Constraints**:
+- Must work with email address as input
+- Prefer free or cheap tiers (<$0.05 per lead)
+- Legal/no ToS violations
+- Fast (<10 seconds total)
+- High success rate (>50%)
+
+**Current Budget**:
+- GitHub: FREE
+- Hunter.io: FREE (50/month)
+- Gemini AI: FREE (1,500/day)
+
+### Implementation Tasks (After Research)
+
+1. **Replace Google Search Crawler**
+   - Remove: `src/enrichers/google-search.crawler.ts`
+   - Add: Search API integration (Brave/Serper/etc.)
+   - Test: Search for known founders, verify results
+
+2. **Replace LinkedIn Crawler**
+   - Remove: `src/enrichers/linkedin.crawler.ts`
+   - Add: LinkedIn API service (Proxycurl/etc.)
+   - Test: Extract experience, education data
+
+3. **Update Orchestrator**
+   - Remove Playwright dependencies
+   - Integrate new API services
+   - Update error handling
+
+4. **Test End-to-End**
+   - Test with real founder emails
+   - Verify founder signals are detected
+   - Confirm speed improvements (<10 sec)
+
+5. **Update Documentation**
+   - Update README with new APIs
+   - Update .env.example with new keys
+   - Document API costs
+
+---
 
 ## Immediate Setup (Before Using)
 

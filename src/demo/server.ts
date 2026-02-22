@@ -12,7 +12,11 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const orchestrator = new EnrichmentOrchestrator();
+const orchestrator = new EnrichmentOrchestrator({
+  githubToken: process.env.GITHUB_TOKEN,
+  hunterApiKey: process.env.HUNTER_API_KEY,
+  geminiApiKey: process.env.GEMINI_API_KEY,
+});
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -122,5 +126,6 @@ API Endpoints:
 Environment:
   GITHUB_TOKEN:    ${process.env.GITHUB_TOKEN ? '✓ Set' : '✗ Not set'}
   HUNTER_API_KEY:  ${process.env.HUNTER_API_KEY ? '✓ Set' : '✗ Not set (optional)'}
+  GEMINI_API_KEY:  ${process.env.GEMINI_API_KEY ? '✓ Set (founder enrichment enabled)' : '✗ Not set (founder enrichment disabled)'}
   `);
 });

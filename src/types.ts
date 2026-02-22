@@ -14,10 +14,68 @@ export interface EnrichedLead extends Lead {
     github?: GitHubProfile;
     linkedin?: LinkedInProfile;
     hunter?: HunterProfile;
+    founder?: FounderProfile;
   };
   score: LeadScore;
   enrichedAt: Date;
   costUsd: number;
+}
+
+export interface FounderProfile {
+  companiesFounded: Array<{
+    name: string;
+    role: string;
+    yearFounded: number | null;
+    description: string;
+  }>;
+  leadershipRoles: Array<{
+    title: string;
+    company: string;
+    yearsInRole: number | null;
+  }>;
+  thoughtLeadership: {
+    speaking: boolean;
+    writing: boolean;
+    podcasting: boolean;
+    examples: string[];
+  };
+  topEducation: Array<{
+    school: string;
+    degree: string | null;
+    field: string | null;
+    isTopTier: boolean;
+  }>;
+  strategicAccomplishments: string[];
+  certifications: string[];
+  volunteerWork: Array<{
+    organization: string;
+    role: string;
+    description: string;
+  }>;
+  mentorship: {
+    isMentor: boolean;
+    examples: string[];
+  };
+  communityBuilding: string[];
+  fundingRaised: Array<{
+    company: string;
+    amount: string | null;
+    round: string | null;
+    year: number | null;
+  }>;
+  exits: Array<{
+    company: string;
+    type: string;
+    year: number | null;
+  }>;
+  pressMentions: Array<{
+    title: string;
+    source: string;
+    snippet: string;
+  }>;
+  awards: string[];
+  confidence: number;
+  dataSources: string[];
 }
 
 export interface GitHubProfile {
@@ -118,25 +176,44 @@ export interface LeadScore {
 }
 
 export interface ScoringSignals {
-  // Ambition
+  // Ambition (GitHub/Dev signals)
   githubProjects?: number;
   linkedinStartups?: number;
   linkedinLeadership?: number;
 
-  // Intelligence
+  // Ambition (Founder signals)
+  companiesFounded?: number;
+  leadershipRoles?: number;
+  thoughtLeadership?: number;
+
+  // Intelligence (GitHub/Dev signals)
   githubLanguages?: number;
   githubContributions?: number;
   linkedinEducation?: number;
   linkedinCertifications?: number;
 
-  // Kindness
+  // Intelligence (Founder signals)
+  topEducation?: number;
+  strategicAccomplishments?: number;
+
+  // Kindness (GitHub/Dev signals)
   githubOpenSource?: number;
   linkedinVolunteering?: number;
 
-  // Track Record
+  // Kindness (Founder signals)
+  volunteerWork?: number;
+  mentorship?: number;
+  communityBuilding?: number;
+
+  // Track Record (GitHub/Dev signals)
   githubStars?: number;
   linkedinPromotions?: number;
   linkedinAwards?: number;
+
+  // Track Record (Founder signals)
+  fundingRaised?: number;
+  exits?: number;
+  pressMentions?: number;
 }
 
 export interface ScoringConfig {
