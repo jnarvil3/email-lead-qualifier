@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Enrichment Demo</title>
+    <title>Lead Qualification Demo</title>
     <style>
         * {
             margin: 0;
@@ -228,7 +228,7 @@
             margin-top: 5px;
         }
 
-        .enrichment-data {
+        .qualification-data {
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px solid #e0e0e0;
@@ -273,8 +273,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎯 Lead Enrichment Demo</h1>
-            <p class="subtitle">Automatically enrich and score leads using GitHub, Hunter.io, and Brave Search data</p>
+            <h1>🎯 Lead Qualification Demo</h1>
+            <p class="subtitle">Automatically qualify and score leads using GitHub, Hunter.io, and Brave Search data</p>
         </header>
 
         <div class="stats" id="stats">
@@ -298,16 +298,16 @@
                 <label>Email Address</label>
                 <input type="email" id="singleEmail" placeholder="john@example.com">
             </div>
-            <button onclick="enrichSingle()">Enrich Lead</button>
+            <button onclick="qualifySingle()">Qualify Lead</button>
         </div>
 
         <div class="card">
-            <h2 style="margin-bottom: 15px;">Batch Enrich</h2>
+            <h2 style="margin-bottom: 15px;">Batch Qualify</h2>
             <div class="input-group">
                 <label>Email Addresses (one per line)</label>
                 <textarea id="batchEmails" placeholder="john@example.com&#10;jane@example.com&#10;bob@example.com"></textarea>
             </div>
-            <button onclick="enrichBatch()">Enrich Batch</button>
+            <button onclick="qualifyBatch()">Enrich Batch</button>
         </div>
 
         <div class="results" id="results"></div>
@@ -343,7 +343,7 @@
             }
         }
 
-        async function enrichSingle() {
+        async function qualifySingle() {
             const email = document.getElementById('singleEmail').value.trim();
             if (!email) {
                 alert('Please enter an email address');
@@ -353,7 +353,7 @@
             showLoading();
 
             try {
-                const response = await fetch(`${API_URL}/api/enrich`, {
+                const response = await fetch(`${API_URL}/api/qualify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email }),
@@ -368,7 +368,7 @@
             }
         }
 
-        async function enrichBatch() {
+        async function qualifyBatch() {
             const emails = document.getElementById('batchEmails').value
                 .split('\n')
                 .map(e => e.trim())
@@ -382,7 +382,7 @@
             showLoading();
 
             try {
-                const response = await fetch(`${API_URL}/api/enrich/batch`, {
+                const response = await fetch(`${API_URL}/api/qualify/batch`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ leads: emails.map(email => ({ email })) }),
@@ -402,7 +402,7 @@
             document.getElementById('results').innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Enriching leads...</p>
+                    <p>Qualifying leads...</p>
                 </div>
             `;
         }
@@ -471,9 +471,9 @@
                             </div>
                         </div>
 
-                        ${renderEnrichmentData(lead.enrichment)}
+                        ${renderQualificationData(lead.qualification)}
                         <div style="margin-top: 10px; color: #999; font-size: 12px;">
-                            Cost: $${(lead.costUsd || 0).toFixed(4)} | Enriched: ${new Date(lead.enrichedAt).toLocaleString()}
+                            Cost: $${(lead.costUsd || 0).toFixed(4)} | Qualified: ${new Date(lead.enrichedAt).toLocaleString()}
                         </div>
                     </div>
                 `;
@@ -482,11 +482,11 @@
             document.getElementById('results').innerHTML = html;
         }
 
-        function renderEnrichmentData(enrichment) {
-            let html = '<div class="enrichment-data">';
+        function renderQualificationData(qualification) {
+            let html = '<div class="qualification-data">';
 
-            if (enrichment.github) {
-                const gh = enrichment.github;
+            if (qualification.github) {
+                const gh = qualification.github;
                 html += `
                     <div class="data-section">
                         <div class="data-label">🐙 GitHub: @${gh.username}</div>
@@ -498,8 +498,8 @@
                 `;
             }
 
-            if (enrichment.hunter) {
-                const hunter = enrichment.hunter;
+            if (qualification.hunter) {
+                const hunter = qualification.hunter;
                 html += `
                     <div class="data-section">
                         <div class="data-label">🔍 Hunter.io</div>

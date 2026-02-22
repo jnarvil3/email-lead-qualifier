@@ -1,17 +1,17 @@
 {
-  "name": "lead-enrichment",
+  "name": "lead-qualifier",
   "version": "1.0.0",
-  "description": "Automatically enrich and score leads from email signups using public data",
+  "description": "Automatically qualify and score leads from email signups using public data",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/demo/server.ts",
     "build": "tsc",
     "start": "node dist/demo/server.js",
     "test": "jest",
-    "enrich": "ts-node src/cli.ts"
+    "qualify": "ts-node src/cli.ts"
   },
   "keywords": [
-    "lead-enrichment",
+    "lead-qualification",
     "scoring",
     "linkedin",
     "github"

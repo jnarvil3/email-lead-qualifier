@@ -1,7 +1,7 @@
 import { Octokit } from '@octokit/rest';
 import { GitHubProfile } from '../types';
 
-export class GitHubEnricher {
+export class GitHubQualifier {
   private octokit: Octokit;
 
   constructor(token?: string) {
@@ -36,7 +36,7 @@ export class GitHubEnricher {
   /**
    * Enrich a lead using their GitHub username
    */
-  async enrichByUsername(username: string): Promise<GitHubProfile | null> {
+  async qualifyByUsername(username: string): Promise<GitHubProfile | null> {
     try {
       // Get user profile
       const { data: user } = await this.octokit.users.getByUsername({
@@ -154,12 +154,12 @@ export class GitHubEnricher {
   /**
    * Try to enrich from email (searches for username first)
    */
-  async enrichByEmail(email: string): Promise<GitHubProfile | null> {
+  async qualifyByEmail(email: string): Promise<GitHubProfile | null> {
     const username = await this.findUsernameByEmail(email);
     if (!username) {
       return null;
     }
-    return this.enrichByUsername(username);
+    return this.qualifyByUsername(username);
   }
 
   /**

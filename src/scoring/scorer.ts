@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as yaml from 'js-yaml';
-import { LeadScore, ScoringConfig, EnrichedLead, ScoringSignals } from '../types';
+import { LeadScore, ScoringConfig, QualifiedLead, ScoringSignals } from '../types';
 
 export class LeadScorer {
   private config: ScoringConfig;
@@ -17,7 +17,7 @@ export class LeadScorer {
   /**
    * Score an enriched lead based on the YAML configuration
    */
-  score(lead: EnrichedLead): LeadScore {
+  score(lead: QualifiedLead): LeadScore {
     const signals: ScoringSignals = {};
     let totalScore = 0;
     const breakdown = {
@@ -33,8 +33,8 @@ export class LeadScorer {
     let ambitionScore = 0;
 
     // GitHub Projects
-    if (lead.enrichment.github) {
-      const repos = lead.enrichment.github.publicRepos;
+    if (lead.qualification.github) {
+      const repos = lead.qualification.github.publicRepos;
       const minRepos = this.config.scoring_rules?.github_projects?.min_repos || 3;
       const maxRepos = this.config.scoring_rules?.github_projects?.max_score_repos || 10;
 
@@ -46,8 +46,8 @@ export class LeadScorer {
     }
 
     // LinkedIn Startups
-    if (lead.enrichment.linkedin) {
-      const startupExp = lead.enrichment.linkedin.experiences.filter(exp => {
+    if (lead.qualification.linkedin) {
+      const startupExp = lead.qualification.linkedin.experiences.filter(exp => {
         const isFounder = exp.title.toLowerCase().includes('founder') ||
                          exp.title.toLowerCase().includes('co-founder');
         // Could enhance: check company size via LinkedIn/Crunchbase
@@ -63,9 +63,9 @@ export class LeadScorer {
     }
 
     // LinkedIn Leadership
-    if (lead.enrichment.linkedin) {
+    if (lead.qualification.linkedin) {
       const leadershipTitles = this.config.scoring_rules?.linkedin_leadership?.leadership_titles || [];
-      const hasLeadership = lead.enrichment.linkedin.experiences.some(exp =>
+      const hasLeadership = lead.qualification.linkedin.experiences.some(exp =>
         leadershipTitles.some((title: string) => exp.title.toLowerCase().includes(title.toLowerCase()))
       );
 
@@ -83,8 +83,8 @@ export class LeadScorer {
     let intelligenceScore = 0;
 
     // GitHub Languages
-    if (lead.enrichment.github) {
-      const langCount = lead.enrichment.github.topLanguages.length;
+    if (lead.qualification.github) {
+      const langCount = lead.qualification.github.topLanguages.length;
       const minLang = this.config.scoring_rules?.github_languages?.min_languages || 2;
       const maxLang = this.config.scoring_rules?.github_languages?.max_score_languages || 5;
 
@@ -96,8 +96,8 @@ export class LeadScorer {
     }
 
     // GitHub Contributions
-    if (lead.enrichment.github) {
-      const contribs = lead.enrichment.github.contributions.lastYear;
+    if (lead.qualification.github) {
+      const contribs = lead.qualification.github.contributions.lastYear;
       const minContribs = this.config.scoring_rules?.github_contributions?.min_contributions || 100;
       const maxContribs = this.config.scoring_rules?.github_contributions?.max_score_contributions || 1000;
 
@@ -109,12 +109,12 @@ export class LeadScorer {
     }
 
     // LinkedIn Education
-    if (lead.enrichment.linkedin) {
+    if (lead.qualification.linkedin) {
       const topSchools = this.config.scoring_rules?.linkedin_education?.top_schools || [];
       const advancedDegreeBonus = this.config.scoring_rules?.linkedin_education?.advanced_degree_bonus || 0.3;
 
       let eduScore = 0;
-      for (const edu of lead.enrichment.linkedin.education) {
+      for (const edu of lead.qualification.linkedin.education) {
         const isTopSchool = topSchools.some((school: string) =>
           edu.school.toLowerCase().includes(school.toLowerCase())
         );
@@ -136,9 +136,9 @@ export class LeadScorer {
     }
 
     // LinkedIn Certifications
-    if (lead.enrichment.linkedin && lead.enrichment.linkedin.certifications.length > 0) {
+    if (lead.qualification.linkedin && lead.qualification.linkedin.certifications.length > 0) {
       const certScore = Math.min(
-        lead.enrichment.linkedin.certifications.length * 2,
+        lead.qualification.linkedin.certifications.length * 2,
         this.config.intelligence.linkedin_certifications
       );
       signals.linkedinCertifications = certScore;
@@ -153,8 +153,8 @@ export class LeadScorer {
     let kindnessScore = 0;
 
     // GitHub Open Source
-    if (lead.enrichment.github) {
-      const osContribs = lead.enrichment.github.openSourceContributions;
+    if (lead.qualification.github) {
+      const osContribs = lead.qualification.github.openSourceContributions;
       const minContribs = this.config.scoring_rules?.github_open_source?.min_contributions || 10;
       const maxContribs = this.config.scoring_rules?.github_open_source?.max_score_contributions || 100;
 
@@ -166,7 +166,7 @@ export class LeadScorer {
     }
 
     // LinkedIn Volunteering
-    if (lead.enrichment.linkedin && lead.enrichment.linkedin.volunteering.length > 0) {
+    if (lead.qualification.linkedin && lead.qualification.linkedin.volunteering.length > 0) {
       signals.linkedinVolunteering = this.config.kindness.linkedin_volunteering;
       kindnessScore += signals.linkedinVolunteering;
     }
@@ -179,8 +179,8 @@ export class LeadScorer {
     let trackRecordScore = 0;
 
     // GitHub Stars
-    if (lead.enrichment.github) {
-      const stars = lead.enrichment.github.totalStars;
+    if (lead.qualification.github) {
+      const stars = lead.qualification.github.totalStars;
       const minStars = this.config.scoring_rules?.github_stars?.min_stars || 50;
       const maxStars = this.config.scoring_rules?.github_stars?.max_score_stars || 500;
 
@@ -192,9 +192,9 @@ export class LeadScorer {
     }
 
     // LinkedIn Promotions (inferred from title changes at same company)
-    if (lead.enrichment.linkedin) {
+    if (lead.qualification.linkedin) {
       let promotionCount = 0;
-      const experiences = lead.enrichment.linkedin.experiences.sort((a, b) =>
+      const experiences = lead.qualification.linkedin.experiences.sort((a, b) =>
         new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
       );
 
@@ -220,8 +220,8 @@ export class LeadScorer {
     // ========================================================================
     // FOUNDER-SPECIFIC SCORING (if founder data available)
     // ========================================================================
-    if (lead.enrichment.founder) {
-      const founder = lead.enrichment.founder;
+    if (lead.qualification.founder) {
+      const founder = lead.qualification.founder;
 
       // AMBITION: Companies Founded
       if (founder.companiesFounded.length > 0) {
@@ -389,12 +389,12 @@ export class LeadScorer {
   /**
    * Generate human-readable explanation of the score
    */
-  private generateReasoning(lead: EnrichedLead, signals: ScoringSignals, tier: string): string {
+  private generateReasoning(lead: QualifiedLead, signals: ScoringSignals, tier: string): string {
     const reasons: string[] = [];
 
     // FOUNDER SIGNALS (priority)
-    if (lead.enrichment.founder) {
-      const founder = lead.enrichment.founder;
+    if (lead.qualification.founder) {
+      const founder = lead.qualification.founder;
 
       // Ambition
       if (signals.companiesFounded && founder.companiesFounded.length > 0) {
@@ -437,14 +437,14 @@ export class LeadScorer {
     }
 
     // GITHUB SIGNALS (for technical founders or devs)
-    if (signals.githubProjects && lead.enrichment.github) {
-      reasons.push(`${lead.enrichment.github.publicRepos} GitHub projects`);
+    if (signals.githubProjects && lead.qualification.github) {
+      reasons.push(`${lead.qualification.github.publicRepos} GitHub projects`);
     }
-    if (signals.githubStars && lead.enrichment.github) {
-      reasons.push(`${lead.enrichment.github.totalStars} GitHub stars`);
+    if (signals.githubStars && lead.qualification.github) {
+      reasons.push(`${lead.qualification.github.totalStars} GitHub stars`);
     }
-    if (signals.githubOpenSource && lead.enrichment.github) {
-      reasons.push(`${lead.enrichment.github.openSourceContributions} open source contributions`);
+    if (signals.githubOpenSource && lead.qualification.github) {
+      reasons.push(`${lead.qualification.github.openSourceContributions} open source contributions`);
     }
 
     if (reasons.length === 0) {

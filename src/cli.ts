@@ -1,13 +1,13 @@
 #!/usr/bin/env ts-node
 
 import * as dotenv from 'dotenv';
-import { EnrichmentOrchestrator } from './enrichers/orchestrator';
+import { QualificationOrchestrator } from './qualifiers/orchestrator';
 import { Lead } from './types';
 
 dotenv.config();
 
 /**
- * Simple CLI for testing lead enrichment
+ * Simple CLI for testing lead qualification
  * Usage: npm run enrich
  */
 async function main() {
@@ -16,7 +16,7 @@ async function main() {
   if (args.length === 0) {
     console.log(`
 ╔════════════════════════════════════════════════════════════════╗
-║             Lead Enrichment CLI                                ║
+║             Lead Qualification CLI                                ║
 ╚════════════════════════════════════════════════════════════════╝
 
 Usage:
@@ -50,9 +50,9 @@ Environment variables required:
     signupDate: new Date(),
   }));
 
-  const orchestrator = new EnrichmentOrchestrator();
+  const orchestrator = new QualificationOrchestrator();
 
-  // Show API stats before enrichment
+  // Show API stats before qualification
   console.log('📊 API Usage Limits:');
   try {
     const stats = await orchestrator.getStats();
@@ -67,7 +67,7 @@ Environment variables required:
   }
 
   // Enrich leads
-  const results = await orchestrator.enrichLeads(leads, {
+  const results = await orchestrator.qualifyLeads(leads, {
     maxConcurrent: 2,
     onProgress: (current, total, lead) => {
       console.log(`\n[${current}/${total}] ✓ ${lead.email} → ${lead.score.tier} (${lead.score.total}/100)`);

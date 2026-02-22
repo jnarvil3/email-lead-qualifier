@@ -1,16 +1,16 @@
-import { GitHubEnricher } from './github.enricher';
-import { HunterEnricher } from './hunter.enricher';
+import { GitHubQualifier } from './github.qualifier';
+import { HunterQualifier } from './hunter.qualifier';
 import { LinkedInCrawler } from './linkedin.crawler';
-import { BraveSearchEnricher } from './brave-search.enricher';
+import { BraveSearchQualifier } from './brave-search.qualifier';
 import { GeminiExtractor } from './gemini.extractor';
 import { LeadScorer } from '../scoring/scorer';
-import { Lead, EnrichedLead, EnrichmentResult } from '../types';
+import { Lead, QualifiedLead, QualificationResult } from '../types';
 
-export class EnrichmentOrchestrator {
-  private githubEnricher: GitHubEnricher;
-  private hunterEnricher: HunterEnricher;
+export class QualificationOrchestrator {
+  private githubQualifier: GitHubQualifier;
+  private hunterQualifier: HunterQualifier;
   private linkedinCrawler: LinkedInCrawler;
-  private braveSearchEnricher: BraveSearchEnricher;
+  private braveSearchQualifier: BraveSearchQualifier;
   private geminiExtractor: GeminiExtractor | null;
   private scorer: LeadScorer;
 
@@ -21,16 +21,16 @@ export class EnrichmentOrchestrator {
     braveSearchApiKey?: string;
     scoringConfigPath?: string;
   }) {
-    this.githubEnricher = new GitHubEnricher(config?.githubToken);
-    this.hunterEnricher = new HunterEnricher(config?.hunterApiKey);
+    this.githubQualifier = new GitHubQualifier(config?.githubToken);
+    this.hunterQualifier = new HunterQualifier(config?.hunterApiKey);
     this.linkedinCrawler = new LinkedInCrawler();
-    this.braveSearchEnricher = new BraveSearchEnricher();
+    this.braveSearchQualifier = new BraveSearchQualifier();
 
     // Gemini is optional - only initialize if API key provided
     try {
       this.geminiExtractor = new GeminiExtractor(config?.geminiApiKey);
     } catch (error) {
-      console.warn('Gemini API key not provided - founder enrichment will be skipped');
+      console.warn('Gemini API key not provided - founder qualification will be skipped');
       this.geminiExtractor = null;
     }
 
@@ -40,13 +40,13 @@ export class EnrichmentOrchestrator {
   /**
    * Enrich a single lead with all available data sources
    */
-  async enrichLead(lead: Lead): Promise<EnrichmentResult> {
+  async qualifyLead(lead: Lead): Promise<QualificationResult> {
     console.log(`\n🔍 Enriching lead: ${lead.email}`);
 
     let costUsd = 0;
-    const enrichedLead: EnrichedLead = {
+    const enrichedLead: QualifiedLead = {
       ...lead,
-      enrichment: {},
+      qualification: {},
       score: {
         total: 0,
         breakdown: { ambition: 0, intelligence: 0, kindness: 0, trackRecord: 0 },
@@ -54,36 +54,36 @@ export class EnrichmentOrchestrator {
         tier: 'weak',
         reasoning: 'No data available for scoring',
       },
-      enrichedAt: new Date(),
+      qualifiedAt: new Date(),
       costUsd: 0,
     };
 
     // ========================================================================
-    // 1. GitHub Enrichment (FREE)
+    // 1. GitHub Qualification (FREE)
     // ========================================================================
     try {
       console.log('  → Checking GitHub...');
-      const githubProfile = await this.githubEnricher.enrichByEmail(lead.email);
+      const githubProfile = await this.githubQualifier.qualifyByEmail(lead.email);
 
       if (githubProfile) {
-        enrichedLead.enrichment.github = githubProfile;
+        enrichedLead.qualification.github = githubProfile;
         console.log(`    ✓ Found GitHub: @${githubProfile.username} (${githubProfile.publicRepos} repos, ${githubProfile.totalStars} stars)`);
       } else {
         console.log('    ✗ No GitHub profile found');
       }
     } catch (error) {
-      console.error('    ✗ GitHub enrichment failed:', error);
+      console.error('    ✗ GitHub qualification failed:', error);
     }
 
     // ========================================================================
-    // 2. Hunter.io Enrichment (FREE TIER: 50/month)
+    // 2. Hunter.io Qualification (FREE TIER: 50/month)
     // ========================================================================
     try {
       console.log('  → Checking Hunter.io...');
-      const hunterProfile = await this.hunterEnricher.verifyEmail(lead.email);
+      const hunterProfile = await this.hunterQualifier.verifyEmail(lead.email);
 
       if (hunterProfile) {
-        enrichedLead.enrichment.hunter = hunterProfile;
+        enrichedLead.qualification.hunter = hunterProfile;
         costUsd += 0.01; // Approximate cost per search
 
         if (hunterProfile.linkedinUrl) {
@@ -99,17 +99,17 @@ export class EnrichmentOrchestrator {
         console.log('    ✗ No Hunter.io data found');
       }
     } catch (error) {
-      console.error('    ✗ Hunter.io enrichment failed:', error);
+      console.error('    ✗ Hunter.io qualification failed:', error);
     }
 
     // ========================================================================
-    // 3. Founder Enrichment (FREE with Gemini - 1,500/day)
+    // 3. Founder Qualification (FREE with Gemini - 1,500/day)
     // ========================================================================
-    if (this.geminiExtractor && enrichedLead.enrichment.hunter) {
+    if (this.geminiExtractor && enrichedLead.qualification.hunter) {
       try {
         console.log('  → Enriching founder data...');
 
-        const hunterData = enrichedLead.enrichment.hunter;
+        const hunterData = enrichedLead.qualification.hunter;
         const personName = hunterData.firstName && hunterData.lastName
           ? `${hunterData.firstName} ${hunterData.lastName}`
           : lead.name || lead.email.split('@')[0];
@@ -121,12 +121,12 @@ export class EnrichmentOrchestrator {
         }
 
         // Step 2: Search Brave for press mentions and founder info
-        const braveSearchData = await this.braveSearchEnricher.searchPerson(personName);
+        const braveSearchData = await this.braveSearchQualifier.searchPerson(personName);
 
         // Also search for funding information
         const companyName = hunterData.company || undefined;
-        const fundingResults = await this.braveSearchEnricher.searchFunding(personName, companyName);
-        const pressResults = await this.braveSearchEnricher.searchPress(personName);
+        const fundingResults = await this.braveSearchQualifier.searchFunding(personName, companyName);
+        const pressResults = await this.braveSearchQualifier.searchPress(personName);
 
         // Combine all search results
         const searchResults = [
@@ -145,20 +145,20 @@ export class EnrichmentOrchestrator {
             personName
           );
 
-          enrichedLead.enrichment.founder = founderSignals;
+          enrichedLead.qualification.founder = founderSignals;
 
-          console.log(`    ✓ Founder enrichment complete (confidence: ${founderSignals.confidence}%)`);
+          console.log(`    ✓ Founder qualification complete (confidence: ${founderSignals.confidence}%)`);
         } else {
-          console.log('    ✗ No data available for founder enrichment');
+          console.log('    ✗ No data available for founder qualification');
         }
       } catch (error: any) {
-        console.error('    ✗ Founder enrichment failed:', error.message);
+        console.error('    ✗ Founder qualification failed:', error.message);
       } finally {
         // Cleanup crawlers
         await this.linkedinCrawler.close();
       }
     } else if (!this.geminiExtractor) {
-      console.log('  ⊘ Skipping founder enrichment (no Gemini API key)');
+      console.log('  ⊘ Skipping founder qualification (no Gemini API key)');
     }
 
     // ========================================================================
@@ -176,7 +176,7 @@ export class EnrichmentOrchestrator {
       console.error('    ✗ Scoring failed:', error);
     }
 
-    const success = Object.keys(enrichedLead.enrichment).length > 0;
+    const success = Object.keys(enrichedLead.qualification).length > 0;
 
     return {
       success,
@@ -188,14 +188,14 @@ export class EnrichmentOrchestrator {
   /**
    * Enrich multiple leads in batch
    */
-  async enrichLeads(leads: Lead[], options?: {
+  async qualifyLeads(leads: Lead[], options?: {
     maxConcurrent?: number;
-    onProgress?: (current: number, total: number, lead: EnrichedLead) => void;
-  }): Promise<EnrichmentResult[]> {
+    onProgress?: (current: number, total: number, lead: QualifiedLead) => void;
+  }): Promise<QualificationResult[]> {
     const maxConcurrent = options?.maxConcurrent || 3;
-    const results: EnrichmentResult[] = [];
+    const results: QualificationResult[] = [];
 
-    console.log(`\n📊 Starting batch enrichment: ${leads.length} leads`);
+    console.log(`\n📊 Starting batch qualification: ${leads.length} leads`);
     console.log(`   Concurrency: ${maxConcurrent}`);
 
     // Process in batches
@@ -203,7 +203,7 @@ export class EnrichmentOrchestrator {
       const batch = leads.slice(i, i + maxConcurrent);
 
       const batchResults = await Promise.all(
-        batch.map(lead => this.enrichLead(lead))
+        batch.map(lead => this.qualifyLead(lead))
       );
 
       results.push(...batchResults);
@@ -227,7 +227,7 @@ export class EnrichmentOrchestrator {
     const totalCost = results.reduce((sum, r) => sum + r.costUsd, 0);
     const successful = results.filter(r => r.success).length;
 
-    console.log(`\n✅ Batch enrichment complete:`);
+    console.log(`\n✅ Batch qualification complete:`);
     console.log(`   Successful: ${successful}/${leads.length}`);
     console.log(`   Total cost: $${totalCost.toFixed(4)}`);
     console.log(`   Avg cost per lead: $${(totalCost / leads.length).toFixed(4)}`);
@@ -236,7 +236,7 @@ export class EnrichmentOrchestrator {
   }
 
   /**
-   * Get enrichment statistics
+   * Get qualification statistics
    */
   async getStats(): Promise<{
     github: { remaining: number; limit: number; reset: Date };
@@ -244,9 +244,9 @@ export class EnrichmentOrchestrator {
     brave: { used: number; limit: number } | null;
   }> {
     const [githubRateLimit, hunterAccount, braveStats] = await Promise.all([
-      this.githubEnricher.getRateLimit(),
-      this.hunterEnricher.getAccountInfo(),
-      this.braveSearchEnricher.getUsageStats(),
+      this.githubQualifier.getRateLimit(),
+      this.hunterQualifier.getAccountInfo(),
+      this.braveSearchQualifier.getUsageStats(),
     ]);
 
     const hunter = hunterAccount ? {

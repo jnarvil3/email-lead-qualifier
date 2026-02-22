@@ -1,5 +1,5 @@
 /**
- * Core types for lead enrichment system
+ * Core types for lead qualification system
  */
 
 export interface Lead {
@@ -9,15 +9,15 @@ export interface Lead {
   signupDate?: Date;
 }
 
-export interface EnrichedLead extends Lead {
-  enrichment: {
+export interface QualifiedLead extends Lead {
+  qualification: {
     github?: GitHubProfile;
     linkedin?: LinkedInProfile;
     hunter?: HunterProfile;
     founder?: FounderProfile;
   };
   score: LeadScore;
-  enrichedAt: Date;
+  qualifiedAt: Date;
   costUsd: number;
 }
 
@@ -236,9 +236,9 @@ export interface ScoringConfig {
   scoring_rules?: any; // Flexible rules config from YAML
 }
 
-export interface EnrichmentResult {
+export interface QualificationResult {
   success: boolean;
-  lead: EnrichedLead | null;
+  lead: QualifiedLead | null;
   error?: string;
   costUsd: number;
 }

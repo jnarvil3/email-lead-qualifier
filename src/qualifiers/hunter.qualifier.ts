@@ -6,14 +6,14 @@ import { HunterProfile } from '../types';
  * Free tier: 50 searches/month
  * https://hunter.io/api-documentation
  */
-export class HunterEnricher {
+export class HunterQualifier {
   private apiKey: string;
   private baseUrl = 'https://api.hunter.io/v2';
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.HUNTER_API_KEY || '';
     if (!this.apiKey) {
-      console.warn('Warning: No Hunter.io API key provided. Enrichment will be skipped.');
+      console.warn('Warning: No Hunter.io API key provided. Qualification will be skipped.');
     }
   }
 

@@ -79,8 +79,8 @@ export class GeminiExtractor {
     }
 
     this.genAI = new GoogleGenerativeAI(key);
-    // Try the base model name
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    // Use Gemini 2.5 Flash (Gemini 1.5 retired in 2026)
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   }
 
   /**

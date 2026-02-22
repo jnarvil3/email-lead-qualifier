@@ -16,7 +16,7 @@ export interface BraveSearchData {
   timestamp: string;
 }
 
-export class BraveSearchEnricher {
+export class BraveSearchQualifier {
   private apiKey: string;
   private baseUrl = 'https://api.search.brave.com/res/v1/web/search';
 
@@ -29,7 +29,8 @@ export class BraveSearchEnricher {
    */
   async searchPerson(name: string): Promise<BraveSearchData> {
     const keywords = ['founder', 'CEO', 'startup', 'entrepreneur', 'company'];
-    const query = `"${name}" ${keywords.join(' OR ')}`;
+    // Use AND to require the exact name plus at least one keyword appearing together
+    const query = `"${name}" AND (${keywords.join(' OR ')})`;
 
     try {
       const results = await this.search(query, 10);
@@ -53,8 +54,8 @@ export class BraveSearchEnricher {
    */
   async searchFunding(name: string, companyName?: string): Promise<BraveSearchResult[]> {
     const searchTerms = companyName
-      ? `"${name}" "${companyName}" (funding OR investment OR "series A" OR "series B" OR raised)`
-      : `"${name}" (funding OR investment OR "series A" OR "series B" OR raised)`;
+      ? `"${name}" AND "${companyName}" AND (funding OR investment OR "series A" OR "series B" OR raised)`
+      : `"${name}" AND (funding OR investment OR "series A" OR "series B" OR raised)`;
 
     try {
       return await this.search(searchTerms, 5);
@@ -68,7 +69,7 @@ export class BraveSearchEnricher {
    * Search for press mentions and media coverage
    */
   async searchPress(name: string): Promise<BraveSearchResult[]> {
-    const query = `"${name}" (interview OR featured OR "spoke at" OR keynote OR TechCrunch OR "Forbes 30")`;
+    const query = `"${name}" AND (interview OR featured OR "spoke at" OR keynote OR TechCrunch OR "Forbes 30")`;
 
     try {
       return await this.search(query, 5);

@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import express from 'express';
 import * as path from 'path';
-import { EnrichmentOrchestrator } from '../enrichers/orchestrator';
+import { QualificationOrchestrator } from '../qualifiers/orchestrator';
 import { Lead } from '../types';
 
 dotenv.config();
@@ -12,7 +12,7 @@ const port = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const orchestrator = new EnrichmentOrchestrator({
+const orchestrator = new QualificationOrchestrator({
   githubToken: process.env.GITHUB_TOKEN,
   hunterApiKey: process.env.HUNTER_API_KEY,
   geminiApiKey: process.env.GEMINI_API_KEY,
@@ -34,7 +34,7 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // Enrich a single lead
-app.post('/api/enrich', async (req, res) => {
+app.post('/api/qualify', async (req, res) => {
   try {
     const { email, name, source } = req.body;
 
@@ -49,7 +49,7 @@ app.post('/api/enrich', async (req, res) => {
       signupDate: new Date(),
     };
 
-    const result = await orchestrator.enrichLead(lead);
+    const result = await orchestrator.qualifyLead(lead);
 
     res.json(result);
   } catch (error: any) {
@@ -73,7 +73,7 @@ app.post('/api/enrich/batch', async (req, res) => {
       signupDate: new Date(),
     }));
 
-    const results = await orchestrator.enrichLeads(formattedLeads, {
+    const results = await orchestrator.qualifyLeads(formattedLeads, {
       maxConcurrent: 3,
     });
 
@@ -110,7 +110,7 @@ app.get('/api/config', (req, res) => {
 app.listen(port, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════════════╗
-║             Lead Enrichment Demo                               ║
+║             Lead Qualification Demo                               ║
 ╚════════════════════════════════════════════════════════════════╝
 
 🚀 Server running at: http://localhost:${port}
@@ -120,13 +120,13 @@ API Endpoints:
   GET  /api/health        - Health check
   GET  /api/stats         - API usage stats
   GET  /api/config        - Scoring configuration
-  POST /api/enrich        - Enrich single lead
-  POST /api/enrich/batch  - Enrich multiple leads
+  POST /api/qualify        - Enrich single lead
+  POST /api/qualify/batch  - Enrich multiple leads
 
 Environment:
   GITHUB_TOKEN:         ${process.env.GITHUB_TOKEN ? '✓ Set' : '✗ Not set'}
   HUNTER_API_KEY:       ${process.env.HUNTER_API_KEY ? '✓ Set' : '✗ Not set (optional)'}
   BRAVE_SEARCH_API_KEY: ${process.env.BRAVE_SEARCH_API_KEY ? '✓ Set (2000 searches/month)' : '✗ Not set'}
-  GEMINI_API_KEY:       ${process.env.GEMINI_API_KEY ? '✓ Set (founder enrichment enabled)' : '✗ Not set (founder enrichment disabled)'}
+  GEMINI_API_KEY:       ${process.env.GEMINI_API_KEY ? '✓ Set (founder qualification enabled)' : '✗ Not set (founder qualification disabled)'}
   `);
 });
