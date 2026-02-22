@@ -280,24 +280,32 @@
         <div class="stats" id="stats">
             <div class="stat-card">
                 <div class="stat-label">Brave Search</div>
-                <div class="stat-value" id="braveRemaining">--</div>
+                <div class="stat-value" style="font-size: 16px;">2,000/month FREE</div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Then $5/1000 queries</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Serper</div>
-                <div class="stat-value" id="serperRemaining">--</div>
+                <div class="stat-value" style="font-size: 16px;">2,500/month FREE</div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Then $50/1000 queries</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Exa</div>
-                <div class="stat-value" id="exaRemaining">--</div>
+                <div class="stat-value" style="font-size: 16px;">1,000/month FREE</div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Then $5/1000 searches</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Tavily</div>
-                <div class="stat-value" id="tavilyRemaining">--</div>
+                <div class="stat-value" style="font-size: 16px;">1,000/month FREE</div>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">Then $0.001/search</div>
             </div>
         </div>
 
         <div class="card">
             <h2 style="margin-bottom: 15px;">Test Single Lead</h2>
+            <div class="input-group">
+                <label>Full Name (optional - AI will try to extract from email if not provided)</label>
+                <input type="text" id="singleName" placeholder="John Smith">
+            </div>
             <div class="input-group">
                 <label>Email Address</label>
                 <input type="email" id="singleEmail" placeholder="john@example.com">
@@ -320,46 +328,10 @@
     <script>
         const API_URL = '';
 
-        // Load stats on page load
-        async function loadStats() {
-            try {
-                const response = await fetch(`${API_URL}/api/stats`);
-                const stats = await response.json();
-
-                if (stats.brave) {
-                    document.getElementById('braveRemaining').textContent =
-                        `${stats.brave.limit - stats.brave.used} / ${stats.brave.limit}`;
-                } else {
-                    document.getElementById('braveRemaining').textContent = 'Not configured';
-                }
-
-                if (stats.serper) {
-                    document.getElementById('serperRemaining').textContent =
-                        `${stats.serper.limit - stats.serper.used} / ${stats.serper.limit}`;
-                } else {
-                    document.getElementById('serperRemaining').textContent = 'Not configured';
-                }
-
-                if (stats.exa) {
-                    document.getElementById('exaRemaining').textContent =
-                        `${stats.exa.limit - stats.exa.used} / ${stats.exa.limit}`;
-                } else {
-                    document.getElementById('exaRemaining').textContent = 'Not configured';
-                }
-
-                if (stats.tavily) {
-                    document.getElementById('tavilyRemaining').textContent =
-                        `${stats.tavily.limit - stats.tavily.used} / ${stats.tavily.limit}`;
-                } else {
-                    document.getElementById('tavilyRemaining').textContent = 'Not configured';
-                }
-            } catch (error) {
-                console.error('Error loading stats:', error);
-            }
-        }
-
         async function qualifySingle() {
             const email = document.getElementById('singleEmail').value.trim();
+            const name = document.getElementById('singleName').value.trim();
+
             if (!email) {
                 alert('Please enter an email address');
                 return;
@@ -368,15 +340,25 @@
             showLoading();
 
             try {
+                const payload = { email };
+                if (name) {
+                    payload.name = name;
+                }
+
                 const response = await fetch(`${API_URL}/api/qualify`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
+                    body: JSON.stringify(payload),
                 });
 
                 const result = await response.json();
-                displayResults([result]);
-                loadStats(); // Refresh stats
+
+                if (!result.success && result.error) {
+                    document.getElementById('results').innerHTML =
+                        `<div class="card"><p style="color: red;">Error: ${result.error}</p></div>`;
+                } else {
+                    displayResults([result]);
+                }
             } catch (error) {
                 document.getElementById('results').innerHTML =
                     `<div class="card"><p style="color: red;">Error: ${error.message}</p></div>`;
