@@ -274,7 +274,7 @@
     <div class="container">
         <header>
             <h1>🎯 Lead Enrichment Demo</h1>
-            <p class="subtitle">Automatically enrich and score leads using GitHub and Hunter.io data</p>
+            <p class="subtitle">Automatically enrich and score leads using GitHub, Hunter.io, and Brave Search data</p>
         </header>
 
         <div class="stats" id="stats">
@@ -285,6 +285,10 @@
             <div class="stat-card">
                 <div class="stat-label">Hunter Searches</div>
                 <div class="stat-value" id="hunterRemaining">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Brave Searches</div>
+                <div class="stat-value" id="braveRemaining">--</div>
             </div>
         </div>
 
@@ -326,6 +330,13 @@
                         `${stats.hunter.limit - stats.hunter.used} / ${stats.hunter.limit}`;
                 } else {
                     document.getElementById('hunterRemaining').textContent = 'Not configured';
+                }
+
+                if (stats.brave) {
+                    document.getElementById('braveRemaining').textContent =
+                        `${stats.brave.limit - stats.brave.used} / ${stats.brave.limit}`;
+                } else {
+                    document.getElementById('braveRemaining').textContent = '2000 / 2000';
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);

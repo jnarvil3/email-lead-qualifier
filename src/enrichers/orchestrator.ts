@@ -241,10 +241,12 @@ export class EnrichmentOrchestrator {
   async getStats(): Promise<{
     github: { remaining: number; limit: number; reset: Date };
     hunter: { used: number; limit: number } | null;
+    brave: { used: number; limit: number } | null;
   }> {
-    const [githubRateLimit, hunterAccount] = await Promise.all([
+    const [githubRateLimit, hunterAccount, braveStats] = await Promise.all([
       this.githubEnricher.getRateLimit(),
       this.hunterEnricher.getAccountInfo(),
+      this.braveSearchEnricher.getUsageStats(),
     ]);
 
     const hunter = hunterAccount ? {
@@ -255,6 +257,7 @@ export class EnrichmentOrchestrator {
     return {
       github: githubRateLimit,
       hunter,
+      brave: braveStats,
     };
   }
 }

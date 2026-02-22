@@ -124,8 +124,9 @@ API Endpoints:
   POST /api/enrich/batch  - Enrich multiple leads
 
 Environment:
-  GITHUB_TOKEN:    ${process.env.GITHUB_TOKEN ? '✓ Set' : '✗ Not set'}
-  HUNTER_API_KEY:  ${process.env.HUNTER_API_KEY ? '✓ Set' : '✗ Not set (optional)'}
-  GEMINI_API_KEY:  ${process.env.GEMINI_API_KEY ? '✓ Set (founder enrichment enabled)' : '✗ Not set (founder enrichment disabled)'}
+  GITHUB_TOKEN:         ${process.env.GITHUB_TOKEN ? '✓ Set' : '✗ Not set'}
+  HUNTER_API_KEY:       ${process.env.HUNTER_API_KEY ? '✓ Set' : '✗ Not set (optional)'}
+  BRAVE_SEARCH_API_KEY: ${process.env.BRAVE_SEARCH_API_KEY ? '✓ Set (2000 searches/month)' : '✗ Not set'}
+  GEMINI_API_KEY:       ${process.env.GEMINI_API_KEY ? '✓ Set (founder enrichment enabled)' : '✗ Not set (founder enrichment disabled)'}
   `);
 });
