@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { config } from '../config/index.js';
+import { config } from '../config/index';
 
 // Using the same interface as Google Search for compatibility with Gemini extractor
 export interface BraveSearchResult {

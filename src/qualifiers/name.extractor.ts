@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { config } from '../config/index.js';
+import { config } from '../config/index';
 
 export interface NameValidationResult {
   isValid: boolean;

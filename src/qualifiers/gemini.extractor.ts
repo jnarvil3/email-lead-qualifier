@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { LinkedInCrawlResult } from './linkedin.crawler';
 import { SearchResult } from './google-search.crawler';
-import { config } from '../config/index.js';
+import { config } from '../config/index';
 
 export interface FounderSignals {
   // Ambition
