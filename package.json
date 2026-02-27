@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/demo/server.ts",
-    "build": "tsc",
+    "build": "tsc && cp src/demo/dashboard.html dist/demo/dashboard.html",
     "start": "node dist/demo/server.js",
     "test": "jest",
     "qualify": "ts-node src/cli.ts"
