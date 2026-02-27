@@ -103,6 +103,11 @@ app.get('/api/config', (req, res) => {
   }
 });
 
+// Redirect /dashboard to /dashboard.html
+app.get('/dashboard', (req, res) => {
+  res.redirect('/dashboard.html');
+});
+
 app.listen(port, () => {
   console.log(`
 ╔════════════════════════════════════════════════════════════════╗
