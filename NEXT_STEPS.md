@@ -1,337 +1,179 @@
-# Next Steps - Email Lead Enricher
+# Next Steps - Lead Qualifier
 
-## Current Status ⚠️
+## Current Status
 
-- [x] Project fully built and working
-- [x] TypeScript compilation successful
-- [x] Demo server tested and running
-- [x] Pushed to GitHub: https://github.com/jnarvil3/email-lead-enricher
-- [x] Comprehensive README with Getting Started guide
-- [x] GitHub API enrichment - Working well ✅
-- [x] Hunter.io API enrichment - Working ✅
-- [x] Gemini AI extractor - Built and ready ✅
-- [x] Scoring system for founders - Complete ✅
-- [⚠️] LinkedIn crawler - Unreliable, violates ToS ❌
-- [⚠️] Google search crawler - Returns 0 results ❌
+- [x] Multi-API search pipeline (Brave, Serper, Exa, Tavily) running in parallel
+- [x] Gemini 2.5 Flash AI scoring with OpenAI fallback
+- [x] Scoring across 4 dimensions (Ambition, Intelligence, Kindness, Track Record)
+- [x] 5-tier classification (Exceptional, Strong, Good, Average, Weak)
+- [x] Web dashboard with redesigned UI (Inter font, indigo color system, responsive)
+- [x] REST API with single + batch endpoints
+- [x] CLI tool for testing
+- [x] Deployed on Railway at leadqualifier.surestepautomation.com
+- [x] Cost tracking (~$0.01 per lead)
+- [x] YAML-configurable scoring weights and thresholds
 
-## CRITICAL ISSUE: Web Crawlers Not Working
+## What the user is actually trying to do
 
-**Problem**: The web crawlers (LinkedIn + Google Search) are not working effectively:
-- LinkedIn blocks scrapers ~70-80% of the time
-- Google search returns 0 results even for real founders
-- Very slow (15-30 seconds total)
-- Violates LinkedIn Terms of Service
-- Low overall data success rate (~10-20% of leads get rich data)
+Someone has a pile of email addresses from signups, applications, or a lead list and needs to figure out which ones are worth their time. They don't want to spend 20 minutes Googling each person. They want to go from "100 emails" to "here are the 8 worth calling" as fast as possible, with enough signal to sound informed on the call.
 
-**Impact**: Can't find founder signals (companies founded, funding, press mentions, etc.)
-
-## PRIORITY 1: Research & Replace Web Crawlers
-
-### Research Tasks (Use ChatGPT/Claude for deep research)
-
-**Goal**: Find reliable APIs to replace Playwright web crawlers
-
-**Research Questions**:
-1. **Search APIs** - Which can find public info about a person from their name?
-   - Brave Search API (2,000 free/month)?
-   - Serper.dev (2,500 free/month)?
-   - SerpAPI?
-   - Perplexity AI API?
-   - You.com API?
-
-2. **People/LinkedIn Data APIs** - Which can get LinkedIn data legally?
-   - Proxycurl (LinkedIn API)?
-   - People Data Labs?
-   - Clearbit?
-   - FullContact?
-   - RocketReach?
-   - Apollo.io?
-
-3. **Startup/Funding Data APIs**
-   - Crunchbase API (expensive)?
-   - Alternative funding databases?
-   - News APIs for startup announcements?
-
-**Constraints**:
-- Must work with email address as input
-- Prefer free or cheap tiers (<$0.05 per lead)
-- Legal/no ToS violations
-- Fast (<10 seconds total)
-- High success rate (>50%)
-
-**Current Budget**:
-- GitHub: FREE
-- Hunter.io: FREE (50/month)
-- Gemini AI: FREE (1,500/day)
-
-### Implementation Tasks (After Research)
-
-1. **Replace Google Search Crawler**
-   - Remove: `src/enrichers/google-search.crawler.ts`
-   - Add: Search API integration (Brave/Serper/etc.)
-   - Test: Search for known founders, verify results
-
-2. **Replace LinkedIn Crawler**
-   - Remove: `src/enrichers/linkedin.crawler.ts`
-   - Add: LinkedIn API service (Proxycurl/etc.)
-   - Test: Extract experience, education data
-
-3. **Update Orchestrator**
-   - Remove Playwright dependencies
-   - Integrate new API services
-   - Update error handling
-
-4. **Test End-to-End**
-   - Test with real founder emails
-   - Verify founder signals are detected
-   - Confirm speed improvements (<10 sec)
-
-5. **Update Documentation**
-   - Update README with new APIs
-   - Update .env.example with new keys
-   - Document API costs
+The deeper need isn't just scoring. It's confidence in prioritization. They want to stop wasting time on weak leads and stop accidentally ignoring strong ones.
 
 ---
 
-## Immediate Setup (Before Using)
+## Biggest Friction Points
 
-### 1. Get GitHub API Token (REQUIRED)
-**Time: 2 minutes**
-
-1. Go to: https://github.com/settings/tokens
-2. Click "Generate new token (classic)"
-3. Give it a name: "Lead Enrichment"
-4. Select scopes:
-   - ✅ `public_repo`
-   - ✅ `read:user`
-5. Click "Generate token"
-6. Copy the token (starts with `ghp_`)
-7. Add to `/Users/jaspernarvil/Desktop/claude/lead-enrichment/.env`:
-   ```
-   GITHUB_TOKEN=ghp_your_token_here
-   ```
-
-### 2. Get Hunter.io API Key (OPTIONAL)
-**Time: 3 minutes | Free tier: 50 searches/month**
-
-1. Go to: https://hunter.io/api
-2. Sign up (free)
-3. Copy your API key
-4. Add to `.env`:
-   ```
-   HUNTER_API_KEY=your_api_key_here
-   ```
-
-**What you get with Hunter.io:**
-- LinkedIn profile URLs
-- Company name
-- Job position
-- Email verification
-
-**Without Hunter.io:**
-- Still works fine
-- GitHub data only (repos, stars, languages, contributions)
-- Scores based purely on GitHub signals
-
-### 3. Test It Works
-```bash
-cd /Users/jaspernarvil/Desktop/claude/lead-enrichment
-npm run dev
-```
-
-Open: http://localhost:3001/dashboard.html
-Try enriching a test email
+1. **Single-lead form doesn't match the real use case.** Users have lists. The batch API exists but the UI only does one at a time.
+2. **Results disappear on page leave.** No persistence, no history. Qualify a lead, close the tab, it's gone.
+3. **10-20 seconds of dead waiting.** No real-time progress. User has no idea if it's searching Brave, waiting on Gemini, or stuck.
+4. **No way to act on results.** No export, no shortlist, no CRM push, no next step after seeing a score.
+5. **No result comparison.** Can't see leads side by side, sort by score, or filter by tier.
+6. **Scoring dimensions are confusing.** "Kindness" and "Intelligence" sound like a personality test, not business qualification.
+7. **No proof it works on first visit.** No sample result, no example output. Visitor has to use the tool to understand it.
+8. **No error recovery.** Weak results get a flat message with no guidance on what to try next.
 
 ---
 
-## Recommended Enhancements
+## Feature Recommendations
 
-### Priority 1: Google Sheets Integration
-**Why**: Much easier for Nick than using API/dashboard
-**Effort**: 2-3 hours
-**Benefit**: Paste emails → click button → see scores
+### Must-Have
 
-**What to build:**
-1. Copy Google Sheets connector from pet project (`commercial-prospecting/lead-enrichment/connectors/google-sheets/`)
-2. Adapt it for email enrichment instead of website crawling
-3. Add columns: score, tier, reasoning, GitHub username, LinkedIn URL
-4. Menu: "Enrich Selected Rows" or "Enrich All Pending"
+#### 1. Sample result on first load
+**Why:** First-time visitors have no idea what they'll get. A pre-populated example result below the form shows the value instantly. Replaces the "What You'll Discover" section with something real.
+**Solves:** "I don't know what this tool does or if it's worth trying."
+**Impact:** High
+**Complexity:** Low (quick win)
 
-**Files to copy/adapt:**
-- `connectors/google-sheets/Enrichment.gs` → adapt for email enrichment API
-- Update endpoint from `/api/enrich` (website crawler) to our email enricher API
+#### 2. Real-time qualification progress
+**Why:** 10-20 seconds is a long wait. Showing "Searching Brave... done. Searching Serper... done. Analyzing..." builds trust and reduces perceived wait time. The server already logs each step internally.
+**Solves:** "Is this thing broken or just slow?"
+**Impact:** High
+**Complexity:** Low (quick win)
 
-### Priority 2: Data Quality Confidence Score
-**Why**: Transparency on how complete the enrichment data is
-**Effort**: 30 minutes
-**Benefit**: Know which scores to trust
+#### 3. Export results (CSV/JSON)
+**Why:** Qualified leads need to go somewhere: a spreadsheet, a CRM, a shared doc. Right now there's no way to get data out of the page.
+**Solves:** "I scored 20 leads but I can't get the data out."
+**Impact:** High
+**Complexity:** Low (quick win)
 
-**Add to each lead:**
-```typescript
-dataQuality: {
-  score: 85,  // 0-100%
-  hasGithub: true,
-  hasLinkedIn: true,
-  hasHunter: true,
-  missingData: []
-}
-```
+#### 4. Batch upload UI
+**Why:** The single-lead form doesn't match the real use case. Users have lists, not individual emails. The batch API endpoint already exists.
+**Solves:** "I have 50 leads and this tool makes me enter them one at a time."
+**Impact:** Very high
+**Complexity:** Medium (bigger bet)
 
-**Scoring logic:**
-- GitHub profile found: +50 points
-- GitHub has activity (repos/contributions): +20 points
-- Hunter.io data found: +20 points
-- LinkedIn URL found: +10 points
+#### 5. Result history / persistence
+**Why:** Without persistence, every qualification is throwaway. Users can't build a pipeline or revisit results.
+**Solves:** "I qualified 10 leads yesterday and now they're all gone."
+**Impact:** Very high
+**Complexity:** Medium (bigger bet)
 
-### Priority 3: Better Batch Processing
-**Why**: Handle rate limits and retries gracefully
-**Effort**: 1 hour
+### Should-Have
 
-**Import from pet project:**
-- Queue management (PQueue)
-- Retry logic for failed enrichments
-- Progress callbacks
-- Better error handling
+#### 6. Rename scoring dimensions
+**Why:** "Kindness" and "Intelligence" sound like a personality test. Rename to business-relevant labels: "Leadership," "Expertise," "Community Impact," "Track Record."
+**Solves:** "This scoring feels weird. Why is 'kindness' a category?"
+**Impact:** Medium
+**Complexity:** Low (quick win)
 
-### Priority 4: CSV Import/Export
-**Why**: Easy to bulk import email lists, export results
-**Effort**: 1 hour
+#### 7. Results table/list view
+**Why:** Card-per-lead doesn't scale. A table with sortable columns (name, score, tier, date) makes batch results usable.
+**Solves:** "I can't compare or sort my leads."
+**Impact:** High
+**Complexity:** Medium (bigger bet)
 
-**Features:**
-- Import: Upload CSV with emails → enrich all → download results
-- Export: Download enriched leads as CSV with all scores
-- Useful if not using Google Sheets
+#### 8. Qualification detail expand/collapse
+**Why:** Show the summary (score, tier, top achievement) in the table row. Click to expand full breakdown. Reduces information overload.
+**Solves:** "Every result dumps everything on screen at once."
+**Impact:** Medium
+**Complexity:** Low (quick win)
+
+#### 9. Weak result guidance
+**Why:** When a lead scores low or returns no data, tell the user why and suggest fixes: "Try adding their full name" or "This person has limited public presence."
+**Solves:** "It just said 'weak' but I don't know if the tool failed or the person is actually weak."
+**Impact:** Medium
+**Complexity:** Low (quick win)
+
+#### 10. Copy-to-clipboard on result cards
+**Why:** One-click copy of the key summary: "Jane Smith - Score: 82 (Exceptional) - Founded TechCorp, Stanford MBA, Series A $5M." Useful for pasting into Slack, email, or notes.
+**Solves:** "I want to share this result with my team quickly."
+**Impact:** Medium
+**Complexity:** Low (quick win)
+
+### Nice-to-Have
+
+#### 11. Saved shortlists
+**Why:** Let users tag leads as "shortlisted" or create named lists. Turns the tool from a one-shot scorer into a lightweight pipeline.
+**Solves:** "I want to track which leads I'm interested in."
+**Impact:** Medium
+**Complexity:** Medium (bigger bet)
+
+#### 12. Webhook/Zapier integration
+**Why:** When a lead is qualified, fire a webhook. Lets users auto-push high-scoring leads to their CRM, Slack, or email sequences.
+**Solves:** "I want high-scoring leads to auto-appear in my CRM."
+**Impact:** Medium
+**Complexity:** Medium (bigger bet)
+
+#### 13. Scoring config UI
+**Why:** The YAML config is powerful but invisible. A simple settings page where users can adjust tier thresholds or dimension weights without editing files.
+**Solves:** "I want to weight track record higher than ambition for my use case."
+**Impact:** Low
+**Complexity:** Medium (bigger bet)
+
+#### 14. API key / auth
+**Why:** Right now anyone with the URL can use the tool and burn through API quotas. Basic API key auth protects the deployment.
+**Solves:** "Someone found my URL and used up my monthly search quota."
+**Impact:** Medium
+**Complexity:** Low (quick win)
+
+#### 15. Usage dashboard
+**Why:** Show how many leads have been qualified, API quota remaining, cost this month. The `/api/stats` endpoint exists but isn't surfaced in the UI.
+**Solves:** "Am I about to hit my API limits?"
+**Impact:** Low
+**Complexity:** Low (quick win)
 
 ---
 
-## Future Ideas (Lower Priority)
+## What to Remove, Simplify, or Combine
 
-### LinkedIn Profile Scraping
-**Effort**: High | **Risk**: High (legal/technical)
-
-- Use Hunter.io to get LinkedIn URL
-- Scrape LinkedIn profile for education, experience, skills
-- Use Gemini Flash AI to parse and extract signals
-- **Problem**: LinkedIn actively blocks scrapers
-- **Alternative**: Stick to official APIs only
-
-### Email Deliverability Verification
-**API**: ZeroBounce, NeverBounce, or Hunter.io verify endpoint
-**Use case**: Ensure emails are valid before scoring
-
-### Webhook Integration
-**Use case**: Auto-enrich when someone signs up to Nick's newsletter
-**How**: Nick's site POSTs email to enrichment API → returns score → stores in DB
-
-### Scheduled Batch Jobs
-**Use case**: Enrich all pending leads every night
-**How**: Cron job + database integration
-
-### Airtable Integration
-Alternative to Google Sheets if Nick uses Airtable
+- **Remove "What You'll Discover" section.** Replace with an actual sample result. A real example is 10x more convincing than four icons.
+- **Remove "Powered by Brave, Serper, Exa, Tavily" trust strip.** End users don't know or care what these are. Replace with user-relevant proof ("Scored X,000 leads") or remove entirely.
+- **Simplify achievement display.** Achievements + search results + GitHub + Hunter is four data blocks. Most users only see the AI analysis. Combine into one clean "Key Findings" section.
+- **Combine confidence into the score display.** Currently buried in the achievement card. Should be next to the score: "82/100 (high confidence)."
 
 ---
 
-## Technical Debt / Nice-to-Haves
+## Recommended Build Order
+
+### Phase 1: Conversion (quick wins, 1-2 days)
+1. Sample result on first load
+2. Real-time qualification progress (SSE or polling)
+3. Rename scoring dimensions to business-relevant labels
+
+### Phase 2: Utility (make it useful for real work, 2-3 days)
+4. Batch upload UI (textarea or CSV, uses existing batch API)
+5. Results table view with sort/filter
+6. Export to CSV/JSON
+7. Copy-to-clipboard on result cards
+
+### Phase 3: Retention (keep users coming back, 3-5 days)
+8. Result history with persistence (SQLite or similar)
+9. Saved shortlists
+10. Weak result guidance
+11. API key auth
+
+### Phase 4: Growth (longer term)
+12. Webhook integration
+13. Scoring config UI
+14. Usage dashboard
+
+---
+
+## Technical Debt
 
 - [ ] Add unit tests for scoring algorithm
 - [ ] Add integration tests for API endpoints
 - [ ] Add input validation (email format checks)
 - [ ] Add rate limit monitoring/alerts
-- [ ] Add logging to file (not just console)
-- [ ] Add Dockerfile for easy deployment
 - [ ] Add environment variable validation on startup
-- [ ] Better TypeScript types for YAML config
-
----
-
-## Questions to Ask Nick
-
-1. **What's your current signup flow?**
-   - Newsletter tool? (Mailchimp, ConvertKit, etc.)
-   - Custom form on website?
-   - Can we add a webhook?
-
-2. **Where do you want enriched data?**
-   - Google Sheets?
-   - Airtable?
-   - Your own database?
-   - Email notification?
-
-3. **What's your volume?**
-   - How many signups per day/week/month?
-   - Determines if free tiers are enough
-
-4. **What's your action plan for tiers?**
-   - Exceptional (80+): Proactive invite email?
-   - Strong (65-79): Priority review?
-   - Good (50-64): Standard process?
-   - Average/Weak: Just track?
-
-5. **Scoring weights - do these make sense?**
-   - Ambition: 30%
-   - Intelligence: 30%
-   - Kindness: 20%
-   - Track Record: 20%
-
----
-
-## Files to Review
-
-**Key configuration:**
-- `src/scoring/config.yaml` - Edit scoring weights and rules here
-- `.env` - Add your API keys here
-
-**Code to understand:**
-- `src/scoring/scorer.ts` - How scoring works
-- `src/enrichers/orchestrator.ts` - Main enrichment flow
-- `src/demo/server.ts` - API endpoints
-
-**Documentation:**
-- `README.md` - Full documentation
-- This file - Next steps
-
----
-
-## Cost Estimates
-
-**Current setup (free tier only):**
-- GitHub API: Free (5,000 req/hour)
-- Hunter.io: Free (50 searches/month)
-- **Total cost per lead**: $0.00 - $0.01
-
-**If Nick has 1,000 signups/month:**
-- First 50: Free with Hunter.io ($0.50 value)
-- Next 950: GitHub only ($0.00)
-- **Total monthly cost**: $0.00
-
-**If he wants LinkedIn data for all 1,000:**
-- Hunter.io paid: $49/month (1,000 searches)
-- GitHub: Free
-- **Total monthly cost**: $49.00
-
----
-
-## Quick Commands Reference
-
-```bash
-# Start demo server
-npm run dev
-
-# Enrich via CLI
-npm run enrich john@example.com
-
-# Build TypeScript
-npm run build
-
-# Run tests (when added)
-npm test
-
-# Kill the demo server
-pkill -f "ts-node-dev"
-```
-
----
-
-## Repository
-https://github.com/jnarvil3/email-lead-enricher
+- [ ] Update remote URL (repo moved to email-lead-qualifier)
