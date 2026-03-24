@@ -103,7 +103,11 @@ app.get('/api/config', (req, res) => {
   }
 });
 
-// Redirect /dashboard to /dashboard.html
+// Redirect root and /dashboard to /dashboard.html
+app.get('/', (req, res) => {
+  res.redirect('/dashboard.html');
+});
+
 app.get('/dashboard', (req, res) => {
   res.redirect('/dashboard.html');
 });
